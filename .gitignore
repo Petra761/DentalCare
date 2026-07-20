@@ -1,0 +1,70 @@
+### .NET ###
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.pdb
+*.cache
+
+# Publicación
+publish/
+*.publishsettings
+
+# NuGet
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+### Node / React ###
+node_modules/
+dist/
+build/
+.npm
+.eslintcache
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+coverage/
+
+### Visual Studio ###
+.vs/
+*.userprefs
+
+### Visual Studio Code ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+### JetBrains (Rider) ###
+.idea/
+
+### Windows ###
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+### macOS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### Secretos y configuración local ###
+.env
+.env.local
+.env.*.local
+appsettings.Development.json
+appsettings.Local.json
+
+### Supabase (si aplica) ###
+.supabase/
+
+### Logs ###
+*.log
+logs/
