@@ -1,12 +1,13 @@
-﻿using System;
+﻿using DentalCare.Clases;
+using DentalCare.Data;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using DentalCare.Clases;
-using DentalCare.Data;
 
 namespace DentalCare.Controllers
 {
@@ -104,5 +105,53 @@ namespace DentalCare.Controllers
         {
             return _context.Usuario.Any(e => e.IdUsuario == id);
         }
+        // LOGIN
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            var usuario = await _context.Usuario
+                .Include(u => u.Rol)
+                .FirstOrDefaultAsync(u =>
+                    u.NombreUsuario == request.NombreUsuario &&
+                    u.Contrasenia == request.Contrasena);
+
+            if (usuario == null)
+            {
+                return Unauthorized(new
+                {
+                    mensaje = "Usuario o contraseña incorrectos."
+                });
+            }
+
+            if (usuario.Estado != "ACTIVO")
+            {
+                return Unauthorized(new
+                {
+                    mensaje = "El usuario está inactivo."
+                });
+            }
+
+            return Ok(new
+            {
+                mensaje = "Inicio de sesión exitoso.",
+                usuario = new
+                {
+                    usuario.IdUsuario,
+                    usuario.Codigo,
+                    usuario.NombreUsuario,
+                    usuario.IdRol,
+                    Rol = usuario.Rol.Nombre,
+                    usuario.Estado
+                }
+            });
+        
+        }
+
     }
+}
+
+public class LoginRequest
+{
+    public string NombreUsuario { get; set; }
+    public string Contrasena { get; set; }
 }
