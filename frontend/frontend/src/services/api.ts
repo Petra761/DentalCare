@@ -29,6 +29,70 @@ export interface Cita {
   estado: 'PENDIENTE' | 'CONFIRMADA' | 'COMPLETADA' | 'CANCELADA';
 }
 
+export interface Cliente {
+  idCliente: number;
+  ci: number;
+  nombre: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  tipoSangre: string;
+  telefono: string;
+  fechaNacimiento: string;
+  estado: string;
+}
+
+export interface Categoria {
+  idCategoria: number;
+  codigo: string;
+  nombre: string;
+  estado: string;
+}
+
+export interface Servicio {
+  idServicio: number;
+  idCategoria: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  duracion: string;
+  estadoServicio: string;
+  estado: string;
+}
+
+export interface DbCita {
+  idCita: number;
+  idCliente: number;
+  idUsuario: number;
+  codigo: string;
+  medioComunicacion: string;
+  fecha: string;
+  hora: string;
+  estadoCita: string;
+  estado: string;
+  clientName?: string;
+  clientCi?: string;
+  clientFirstChar?: string;
+  serviceName?: string;
+}
+
+export interface DetalleCita {
+  idDetalleCita: number;
+  idCita: number;
+  idServicio: number;
+}
+
+export interface NuevaCitaDto {
+  idCliente: number;
+  idUsuario: number;
+  medioComunicacion: string;
+  fecha: string;
+  hora: string;
+  idServicio: number;
+  /** Estado inicial: Pendiente | Confirmada | Cancelada | Completada */
+  estadoCita?: string;
+}
+
+
 // Initial Mock Data
 const MOCK_ROLES: Rol[] = [
   { id: 1, nombre: 'Administrador', estado: 'ACTIVO' },
@@ -322,5 +386,213 @@ export const apiService = {
     const citas = getLocalCitas();
     const filtered = citas.filter(c => c.id !== id);
     saveLocalCitas(filtered);
+  },
+
+  // --- DATABASE-BOUND ENDPOINTS FOR PANTALLA GESTIÓN DE CITAS ---
+  async getClientes(): Promise<Cliente[]> {
+    if (isMockMode) {
+      const stored = localStorage.getItem('dental_db_clientes');
+      if (stored) return JSON.parse(stored);
+      const defaultMock: Cliente[] = [
+        { idCliente: 1, ci: 1234567, nombre: 'Ricardo', apellidoPaterno: 'Mendoza', apellidoMaterno: 'Salas', tipoSangre: 'O+', telefono: '77777777', fechaNacimiento: '1990-05-10', estado: 'Activo' },
+        { idCliente: 2, ci: 4567890, nombre: 'Lucía', apellidoPaterno: 'González', apellidoMaterno: 'Paz', tipoSangre: 'A+', telefono: '76666666', fechaNacimiento: '1995-08-15', estado: 'Activo' },
+        { idCliente: 3, ci: 3221445, nombre: 'Carlos', apellidoPaterno: 'Pereira', apellidoMaterno: 'Luna', tipoSangre: 'B+', telefono: '75555555', fechaNacimiento: '1988-11-20', estado: 'Activo' },
+        { idCliente: 4, ci: 1726354, nombre: 'Gael', apellidoPaterno: 'Rodriguez', apellidoMaterno: 'Sanchez', tipoSangre: 'O+', telefono: '74444444', fechaNacimiento: '2000-01-01', estado: 'Activo' }
+      ];
+      localStorage.setItem('dental_db_clientes', JSON.stringify(defaultMock));
+      return defaultMock;
+    }
+    const res = await fetch(`${BASE_URL}/Clientes`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error al obtener clientes');
+    return await res.json();
+  },
+
+  async getCategorias(): Promise<Categoria[]> {
+    if (isMockMode) {
+      const stored = localStorage.getItem('dental_db_categorias');
+      if (stored) return JSON.parse(stored);
+      const defaultMock: Categoria[] = [
+        { idCategoria: 1, codigo: 'CAT001', nombre: 'General', estado: 'Activo' },
+        { idCategoria: 2, codigo: 'CAT002', nombre: 'Ortodoncia', estado: 'Activo' },
+        { idCategoria: 3, codigo: 'CAT003', nombre: 'Cirugia', estado: 'Activo' },
+      ];
+      localStorage.setItem('dental_db_categorias', JSON.stringify(defaultMock));
+      return defaultMock;
+    }
+    const res = await fetch(`${BASE_URL}/Categorias`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error al obtener categorías');
+    return await res.json();
+  },
+
+  async getServicios(): Promise<Servicio[]> {
+    if (isMockMode) {
+      const stored = localStorage.getItem('dental_db_servicios');
+      if (stored) return JSON.parse(stored);
+      const defaultMock: Servicio[] = [
+        { idServicio: 1, idCategoria: 1, codigo: 'SRV001', nombre: 'Limpieza Profunda', descripcion: 'Limpieza dental profunda', duracion: '01:00:00', estadoServicio: 'Disponible', estado: 'Activo' },
+        { idServicio: 2, idCategoria: 2, codigo: 'SRV002', nombre: 'Ortodoncia Control', descripcion: 'Control de brackets', duracion: '00:30:00', estadoServicio: 'Disponible', estado: 'Activo' },
+        { idServicio: 3, idCategoria: 3, codigo: 'SRV003', nombre: 'Implante Fase 2', descripcion: 'Fase 2 de implantes', duracion: '01:30:00', estadoServicio: 'Disponible', estado: 'Activo' },
+        { idServicio: 4, idCategoria: 3, codigo: 'SRV004', nombre: 'Extracción Molar', descripcion: 'Extracción quirúrgica', duracion: '01:00:00', estadoServicio: 'Disponible', estado: 'Activo' }
+      ];
+      localStorage.setItem('dental_db_servicios', JSON.stringify(defaultMock));
+      return defaultMock;
+    }
+    const res = await fetch(`${BASE_URL}/Servicios`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error al obtener servicios');
+    return await res.json();
+  },
+
+  async getDbCitas(): Promise<DbCita[]> {
+    if (isMockMode) {
+      const stored = localStorage.getItem('dental_db_citas');
+      if (stored) return JSON.parse(stored);
+      const defaultMock: DbCita[] = [];
+      localStorage.setItem('dental_db_citas', JSON.stringify(defaultMock));
+      return defaultMock;
+    }
+    const res = await fetch(`${BASE_URL}/Citas`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error al obtener citas');
+    return await res.json();
+  },
+
+  async getDetallesCita(): Promise<DetalleCita[]> {
+    if (isMockMode) {
+      const stored = localStorage.getItem('dental_db_detalles');
+      if (stored) return JSON.parse(stored);
+      const defaultMock: DetalleCita[] = [];
+      localStorage.setItem('dental_db_detalles', JSON.stringify(defaultMock));
+      return defaultMock;
+    }
+    const res = await fetch(`${BASE_URL}/DetallesCita`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error al obtener detalles de cita');
+    return await res.json();
+  },
+
+  async crearNuevaCita(dto: NuevaCitaDto): Promise<DbCita> {
+    if (isMockMode) {
+      const clientes = await this.getClientes();
+      const servicios = await this.getServicios();
+      
+      const client = clientes.find(c => c.idCliente === dto.idCliente);
+      const service = servicios.find(s => s.idServicio === dto.idServicio);
+      
+      if (!client) throw new Error('Paciente no encontrado.');
+      if (!service) throw new Error('Servicio no encontrado.');
+      
+      const today = new Date().toISOString().split('T')[0];
+      if (dto.fecha < today) {
+        throw new Error('La fecha de la cita no puede ser anterior al día actual.');
+      }
+      
+      const [, minutes] = dto.hora.split(':').map(Number);
+      if (minutes !== 0 && minutes !== 30) {
+        throw new Error('La hora debe ser en intervalos de 30 minutos.');
+      }
+      
+      const dbCitas = await this.getDbCitas();
+      const dbDetalles = await this.getDetallesCita();
+      const dbServicios = await this.getServicios();
+
+      // Calculate end time for new appointment
+      const [newH, newM] = dto.hora.split(':').map(Number);
+      const newStartMin = newH * 60 + newM;
+      const svc = dbServicios.find(s => s.idServicio === dto.idServicio);
+      const durMin = svc ? (() => {
+        const [h, m] = svc.duracion.split(':').map(Number);
+        return h * 60 + m;
+      })() : 30;
+      const newEndMin = newStartMin + durMin;
+
+      // Check for overlaps
+      for (const cita of dbCitas) {
+        if (cita.estadoCita === 'Cancelada' || cita.estadoCita === 'Completada') continue;
+        if (cita.fecha !== dto.fecha) continue;
+
+        const detalle = dbDetalles.find(d => d.idCita === cita.idCita);
+        if (!detalle) continue;
+        const srv = dbServicios.find(s => s.idServicio === detalle.idServicio);
+        if (!srv) continue;
+
+        const [eH, eM] = cita.hora.split(':').map(Number);
+        const existingStartMin = eH * 60 + eM;
+        const [dh, dm] = srv.duracion.split(':').map(Number);
+        const existingEndMin = existingStartMin + dh * 60 + dm;
+
+        // Overlap check: newStart < existingEnd AND existingStart < newEnd
+        if (newStartMin < existingEndMin && existingStartMin < newEndMin) {
+          const isPatient = cita.idCliente === dto.idCliente;
+          const isDentist = cita.idUsuario === dto.idUsuario;
+          if (!isPatient && !isDentist) continue;
+
+          const fmtTime = (m: number) => `${Math.floor(m/60).toString().padStart(2,'0')}:${(m%60).toString().padStart(2,'0')}`;
+          const msg = isPatient
+            ? `El paciente ya tiene una cita (${cita.codigo}: ${srv.nombre} de ${fmtTime(existingStartMin)} a ${fmtTime(existingEndMin)}) que se solapa con el horario solicitado.`
+            : `El horario solicitado se solapa con la cita ${cita.codigo} (${srv.nombre} de ${fmtTime(existingStartMin)} a ${fmtTime(existingEndMin)}).`;
+          throw new Error(msg);
+        }
+      }
+      
+      const randomId = Math.floor(Math.random() * 100000);
+      const newCita: DbCita = {
+        idCita: randomId,
+        idCliente: dto.idCliente,
+        idUsuario: dto.idUsuario,
+        codigo: `CIT-${Math.floor(10000 + Math.random() * 90000)}`,
+        medioComunicacion: dto.medioComunicacion,
+        fecha: dto.fecha,
+        hora: dto.hora,
+        estadoCita: dto.estadoCita ?? 'Pendiente',
+        estado: 'Activo'
+      };
+      
+      dbCitas.push(newCita);
+      localStorage.setItem('dental_db_citas', JSON.stringify(dbCitas));
+      
+      const detallesActualizados = await this.getDetallesCita();
+      detallesActualizados.push({
+        idDetalleCita: Math.floor(Math.random() * 100000),
+        idCita: randomId,
+        idServicio: dto.idServicio
+      });
+      localStorage.setItem('dental_db_detalles', JSON.stringify(detallesActualizados));
+      
+      return newCita;
+    }
+
+    const res = await fetch(`${BASE_URL}/Citas/nueva`, {
+      method: 'POST',
+      headers: getJsonHeaders(),
+      body: JSON.stringify(dto)
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ mensaje: 'Error al registrar la cita' }));
+      throw new Error(errData.mensaje || 'Error al agendar la cita en el servidor');
+    }
+
+    return await res.json();
+  },
+
+  async actualizarEstadoCita(idCita: number, nuevoEstado: string): Promise<void> {
+    if (isMockMode) {
+      const citas = await this.getDbCitas();
+      const idx = citas.findIndex(c => c.idCita === idCita);
+      if (idx === -1) throw new Error('Cita no encontrada.');
+      citas[idx] = { ...citas[idx], estadoCita: nuevoEstado };
+      localStorage.setItem('dental_db_citas', JSON.stringify(citas));
+      return;
+    }
+
+    // Use the lightweight PATCH /estado endpoint
+    const res = await fetch(`${BASE_URL}/Citas/${idCita}/estado`, {
+      method: 'PATCH',
+      headers: getJsonHeaders(),
+      body: JSON.stringify({ estadoCita: nuevoEstado }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ mensaje: 'Error al actualizar el estado' }));
+      throw new Error(errData.mensaje || 'Error al actualizar el estado de la cita');
+    }
   }
 };
