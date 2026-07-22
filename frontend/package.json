@@ -1,0 +1,11 @@
+{
+  "name": "dentalcare-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for DentalCare Appointments Workspace",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx -y http-server -p 3000"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

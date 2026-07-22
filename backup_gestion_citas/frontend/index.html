@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Citas - DentalCare</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Main Content Container (Gestión de Citas) -->
+    <main class="appointments-container">
+        <!-- Header Row -->
+        <header class="appointments-header">
+            <div class="header-text">
+                <h1>Gestión de Citas</h1>
+                <p>Administra y organiza el flujo de pacientes del día.</p>
+            </div>
+            <button id="btnNuevaCita" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Nueva Cita
+            </button>
+        </header>
+
+        <!-- Search and Filters Section -->
+        <section class="controls-section">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Buscar por Nombre del Cliente o CI...">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" data-status="Todas">Todas</button>
+                <button class="filter-btn" data-status="Pendiente">Pendientes</button>
+                <button class="filter-btn" data-status="Confirmada">Confirmadas</button>
+                <button class="filter-btn" data-status="Cancelada">Canceladas</button>
+            </div>
+        </section>
+
+        <!-- Table Container -->
+        <section class="table-container">
+            <table class="appointments-table" id="appointmentsTable">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Fecha y Hora</th>
+                        <th>Tratamiento</th>
+                        <th>Estado</th>
+                        <th class="actions-header">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="appointmentsTableBody">
+                    <!-- Dynamic Rows go here -->
+                    <tr>
+                        <td colspan="5" class="table-loading">Cargando citas...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Modal: Nueva Cita -->
+    <div id="modalNuevaCita" class="modal-overlay">
+        <div class="modal-card">
+            <header class="modal-header">
+                <div class="modal-title-area">
+                    <h2>Nueva Cita - Modal</h2>
+                    <p>Ingrese los datos para agendar la sesión.</p>
+                </div>
+                <button id="btnCerrarModal" class="modal-close-btn">&times;</button>
+            </header>
+
+            <form id="appointmentForm" class="modal-form">
+                <!-- Search Patient Field -->
+                <div class="form-group autocomplete-container">
+                    <label for="buscarPaciente">Buscar Paciente / CI</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-search input-icon"></i>
+                        <input type="text" id="buscarPaciente" placeholder="Ej: 17263544-2 o Juan Pérez" autocomplete="off" required>
+                    </div>
+                    <!-- Patient suggestion list -->
+                    <ul id="patientSuggestions" class="suggestions-list"></ul>
+                </div>
+
+                <!-- Full Name (Read-only) -->
+                <div class="form-group">
+                    <label for="nombreCompleto">Nombre Completo</label>
+                    <input type="text" id="nombreCompleto" class="input-readonly" readonly placeholder="Se llena automáticamente al seleccionar un paciente">
+                    <input type="hidden" id="selectedClienteId">
+                </div>
+
+                <!-- Service Selector -->
+                <div class="form-group">
+                    <label for="servicioSelect">Servicio</label>
+                    <select id="servicioSelect" required>
+                        <option value="" disabled selected>Elegir servicio...</option>
+                        <!-- Services loaded dynamically -->
+                    </select>
+                </div>
+
+                <!-- Date & Time Row -->
+                <div class="form-row">
+                    <div class="form-group half-width">
+                        <label for="fechaInput">Fecha</label>
+                        <input type="date" id="fechaInput" required>
+                    </div>
+                    <div class="form-group half-width">
+                        <label for="horaInput">Hora</label>
+                        <input type="time" id="horaInput" required>
+                    </div>
+                </div>
+
+                <!-- Communication Medium -->
+                <div class="form-group">
+                    <label for="medioComunicacion">Medio de Comunicación</label>
+                    <select id="medioComunicacion" required>
+                        <option value="WhatsApp" selected>WhatsApp</option>
+                        <option value="Recepción">Recepción</option>
+                        <option value="Teléfono">Teléfono</option>
+                    </select>
+                </div>
+
+                <!-- Appointment Status (Initially Pendiente, readonly/disabled) -->
+                <div class="form-group">
+                    <label for="estadoCita">Estado de la Cita</label>
+                    <input type="text" id="estadoCita" class="input-readonly" readonly value="Pendiente">
+                </div>
+
+                <!-- Form Actions -->
+                <footer class="modal-footer">
+                    <button type="button" id="btnCancelarCita" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="btnAgendarCita" class="btn btn-primary btn-submit">
+                        <i class="fa-regular fa-calendar-check"></i> Agendar Cita
+                    </button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
