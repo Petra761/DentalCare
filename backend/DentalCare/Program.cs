@@ -73,8 +73,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowFrontend");
-app.UseHttpsRedirection();
+app.UseCors("AllowAll");
+if (!app.Environment.IsDevelopment()) app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -178,4 +178,5 @@ void SeedDatabase(DentalCareContext context)
         context.SaveChanges();
     }
 }
+
 
