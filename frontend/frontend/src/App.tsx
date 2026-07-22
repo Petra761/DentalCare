@@ -4,18 +4,21 @@ import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
+import { GestionCitas } from './pages/GestionCitas';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          {/* Rutas del equipo — con Layout compartido (Navbar + Footer) */}
+          <Route element={<Layout><Login /></Layout>} path="/" />
+          <Route element={<Layout><Register /></Layout>} path="/register" />
+          <Route element={<Layout><Dashboard /></Layout>} path="/dashboard" />
+
+          {/* Nuestra página — completamente independiente, SIN Layout */}
+          <Route path="/gestion-citas" element={<GestionCitas />} />
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   );
