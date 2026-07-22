@@ -10,6 +10,7 @@ namespace DentalCare.Clases
         public string Nombre { get; set; } = string.Empty;
         public string ApellidoPaterno { get; set; } = string.Empty;
         public string ApellidoMaterno { get; set; } = string.Empty;
+        public string Telefono {  get; set; } = string.Empty;
         public string TipoSangre { get; set; } = string.Empty;
         public DateOnly FechaNacimiento { get; set; } = new DateOnly();
         public string Estado { get; set; } = "Activo";
