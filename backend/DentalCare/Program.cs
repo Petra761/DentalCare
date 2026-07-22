@@ -73,7 +73,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
@@ -153,10 +153,13 @@ void SeedDatabase(DentalCareContext context)
         var cli4 = context.Cliente.First(c => c.Nombre == "Gael");
         var usr = context.Usuario.First();
 
-        var cita1 = new Cita { IdCliente = cli1.IdCliente, IdUsuario = usr.IdUsuario, Codigo = "CIT001", MedioComunicacion = "WhatsApp", Fecha = new DateOnly(2023, 10, 15), Hora = new TimeOnly(9, 0), EstadoCita = "Confirmada", Estado = "Activo" };
-        var cita2 = new Cita { IdCliente = cli2.IdCliente, IdUsuario = usr.IdUsuario, Codigo = "CIT002", MedioComunicacion = "Teléfono", Fecha = new DateOnly(2023, 10, 15), Hora = new TimeOnly(10, 30), EstadoCita = "Pendiente", Estado = "Activo" };
-        var cita3 = new Cita { IdCliente = cli3.IdCliente, IdUsuario = usr.IdUsuario, Codigo = "CIT003", MedioComunicacion = "Recepción", Fecha = new DateOnly(2023, 10, 15), Hora = new TimeOnly(11, 45), EstadoCita = "Cancelada", Estado = "Activo" };
-        var cita4 = new Cita { IdCliente = cli4.IdCliente, IdUsuario = usr.IdUsuario, Codigo = "CIT004", MedioComunicacion = "WhatsApp", Fecha = new DateOnly(2023, 10, 16), Hora = new TimeOnly(13, 30), EstadoCita = "Pendiente", Estado = "Activo" };
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var manana = hoy.AddDays(1);
+
+        var cita1 = new Cita { IdCliente = cli1.IdCliente, IdUsuario = usr.IdUsuario, Codigo = "CIT001", MedioComunicacion = "WhatsApp", Fecha = hoy, Hora = new TimeOnly(9, 0), EstadoCita = "Confirmada", Estado = "Activo" };
+        var cita2 = new Cita { IdCliente = cli2.IdCliente, IdUsuario = usr.IdUsuario, Codigo = "CIT002", MedioComunicacion = "Teléfono", Fecha = hoy, Hora = new TimeOnly(10, 30), EstadoCita = "Pendiente", Estado = "Activo" };
+        var cita3 = new Cita { IdCliente = cli3.IdCliente, IdUsuario = usr.IdUsuario, Codigo = "CIT003", MedioComunicacion = "Recepción", Fecha = manana, Hora = new TimeOnly(9, 0), EstadoCita = "Confirmada", Estado = "Activo" };
+        var cita4 = new Cita { IdCliente = cli4.IdCliente, IdUsuario = usr.IdUsuario, Codigo = "CIT004", MedioComunicacion = "WhatsApp", Fecha = manana, Hora = new TimeOnly(11, 0), EstadoCita = "Pendiente", Estado = "Activo" };
 
         context.Cita.AddRange(cita1, cita2, cita3, cita4);
         context.SaveChanges();
