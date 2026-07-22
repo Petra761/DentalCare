@@ -3,7 +3,6 @@ import { AuthProvider } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { Dashboard } from './pages/Dashboard';
 import { GestionCitas } from './pages/GestionCitas';
 
 function App() {
@@ -14,7 +13,6 @@ function App() {
           {/* Rutas del equipo — con Layout compartido (Navbar + Footer) */}
           <Route element={<Layout><Login /></Layout>} path="/" />
           <Route element={<Layout><Register /></Layout>} path="/register" />
-          <Route element={<Layout><Dashboard /></Layout>} path="/dashboard" />
 
           {/* Nuestra página — completamente independiente, SIN Layout */}
           <Route path="/gestion-citas" element={<GestionCitas />} />
