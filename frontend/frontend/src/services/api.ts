@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5092/api';
+const BASE_URL = 'https://localhost:7241/api';
 
 export interface Rol {
   id: number;

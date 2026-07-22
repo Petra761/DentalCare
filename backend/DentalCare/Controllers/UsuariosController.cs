@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace DentalCare.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsuariosController : ControllerBase
@@ -134,7 +134,7 @@ namespace DentalCare.Controllers
             });
         }
 
-        if (usuario.Estado != "ACTIVO")
+        if (usuario.Estado != "Activo")
         {
             return Unauthorized(new
             {
