@@ -347,7 +347,7 @@ namespace DentalCare.Migrations
             modelBuilder.Entity("DentalCare.Clases.DetalleCita", b =>
                 {
                     b.HasOne("DentalCare.Clases.Cita", "Cita")
-                        .WithMany()
+                        .WithMany("DetalleCitas")
                         .HasForeignKey("IdCita")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -383,6 +383,11 @@ namespace DentalCare.Migrations
                         .IsRequired();
 
                     b.Navigation("Rol");
+                });
+
+            modelBuilder.Entity("DentalCare.Clases.Cita", b =>
+                {
+                    b.Navigation("DetalleCitas");
                 });
 #pragma warning restore 612, 618
         }
