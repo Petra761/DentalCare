@@ -90,27 +90,70 @@ namespace DentalCare.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Cliente>> GetCliente(int id)
         {
-            var cliente = await _context.Cliente.FindAsync(id);
+            var cliente = await _context.Cliente
+                .Include(c => c.AlergiaClientes) 
+                .FirstOrDefaultAsync(c => c.IdCliente == id);
 
             if (cliente == null)
             {
-                return NotFound();
+                return NotFound(new { mensaje = "El cliente no existe o fue eliminado." });
             }
 
-            return cliente;
+            return Ok(cliente);
         }
-
+        
         // PUT: api/Clientes/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCliente(int id, Cliente cliente)
+        public async Task<IActionResult> PutCliente(int id, [FromBody] Cliente clienteDto)
         {
-            if (id != cliente.IdCliente)
+            if (id != clienteDto.IdCliente)
             {
-                return BadRequest();
+                return BadRequest(new { mensaje = "El ID de la URL no coincide con el del objeto enviado." });
             }
 
-            _context.Entry(cliente).State = EntityState.Modified;
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            
+            var clienteExistente = await _context.Cliente
+                .Include(c => c.AlergiaClientes)
+                .FirstOrDefaultAsync(c => c.IdCliente == id);
+
+            if (clienteExistente == null)
+            {
+                return NotFound(new { mensaje = "El cliente no fue encontrado." });
+            }
+
+            
+            _context.Entry(clienteExistente).CurrentValues.SetValues(clienteDto);
+
+            
+            if (clienteDto.AlergiaClientes != null)
+            {
+                foreach (var alergiaExistente in clienteExistente.AlergiaClientes.ToList())
+                {
+                    if (!clienteDto.AlergiaClientes.Any(a => a.IdAlergia == alergiaExistente.IdAlergia))
+                    {
+                        _context.Set<AlergiaCliente>().Remove(alergiaExistente);
+                    }
+                }
+
+                foreach (var nuevaAlergia in clienteDto.AlergiaClientes)
+                {
+                    var existe = clienteExistente.AlergiaClientes
+                        .Any(a => a.IdAlergia == nuevaAlergia.IdAlergia);
+
+                    if (!existe)
+                    {
+                        nuevaAlergia.IdCliente = id; // Asegurar la relación FK
+                        clienteExistente.AlergiaClientes.Add(nuevaAlergia);
+                    }
+                }
+            }
 
             try
             {
@@ -128,7 +171,7 @@ namespace DentalCare.Controllers
                 }
             }
 
-            return NoContent();
+            return NoContent(); 
         }
 
         // POST: api/Clientes
@@ -191,13 +234,15 @@ namespace DentalCare.Controllers
             var cliente = await _context.Cliente.FindAsync(id);
             if (cliente == null)
             {
-                return NotFound();
+                return NotFound(new { mensaje = "El cliente no existe o ya fue eliminado." });
             }
 
-            _context.Cliente.Remove(cliente);
+            cliente.Estado = "Inactivo";
+
+            _context.Entry(cliente).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = "Cliente desactivado exitosamente." });
         }
 
         private bool ClienteExists(int id)

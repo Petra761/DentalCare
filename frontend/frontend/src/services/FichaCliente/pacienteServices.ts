@@ -30,6 +30,11 @@ export interface ClientePayload {
   estado?: string;
   alergiaClientes: { idAlergia: number }[];
 }
+
+export interface ClienteUpdatePayload extends ClientePayload {
+  idCliente: number;
+  alergiaClientes: { idAlergia: number; idCliente?: number }[];
+}
 export interface ServicioRealizado {
   idServicio: number;
   nombreServicio: string;
@@ -99,4 +104,31 @@ export const getClientePorId = async (idCliente: number): Promise<Paciente> => {
     throw new Error("Error al obtener los detalles del paciente");
   }
   return await res.json();
+};
+
+// PUT: Actualizar datos de un cliente
+export const actualizarCliente = async (
+  idCliente: number,
+  cliente: ClienteUpdatePayload,
+): Promise<void> => {
+  const res = await fetch(`${API_URL}/${idCliente}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(cliente),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.mensaje || "Error al actualizar el paciente");
+  }
+};
+
+// DELETE: Desactivar un cliente (soft-delete → Estado = 'Inactivo')
+export const eliminarCliente = async (idCliente: number): Promise<void> => {
+  const res = await fetch(`${API_URL}/${idCliente}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.mensaje || "Error al eliminar el paciente");
+  }
 };
