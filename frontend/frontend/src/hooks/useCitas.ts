@@ -9,13 +9,11 @@ export const useCitas = (selectedDate: string) => {
   const fetchTodo = async () => {
     try {
       setLoading(true);
-      // 1. Cargar Citas y Servicios en paralelo
       const [citasData, serviciosData] = await Promise.all([
         citasService.getCitas(),
         citasService.getServicios(),
       ]);
 
-      // 2. Obtener Clientes únicos de las citas para no repetir llamadas a la API
       const idClientesUnicos = Array.from(
         new Set(citasData.map((c: any) => c.idCliente)),
       );
@@ -23,13 +21,11 @@ export const useCitas = (selectedDate: string) => {
         idClientesUnicos.map((id) => citasService.getCliente(id as number)),
       );
 
-      // Crear mapas para búsqueda rápida
       const clienteMap = new Map(clientesData.map((c) => [c.idCliente, c]));
       const servicioMap = new Map(
         serviciosData.map((s: any) => [s.idServicio, s]),
       );
 
-      // 3. Enriquecer las citas con nombres reales
       const enriquecidas = citasData.map((cita: any) => {
         const cliente = clienteMap.get(cita.idCliente);
         const idServicio = cita.detalleCitas[0]?.idServicio;

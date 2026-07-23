@@ -15,27 +15,22 @@ export const useAgendaData = (selectedDate: string) => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // 1. Cargar Citas y Servicios en paralelo
       const [citasData, serviciosData] = await Promise.all([
         citasService.getCitas(),
         citasService.getServicios(),
       ]);
 
-      // 2. Obtener Clientes únicos de las citas para no repetir llamadas
       const idClientesUnicos = Array.from(
         new Set(citasData.map((c) => c.idCliente)),
       );
 
-      // 3. Cargar datos de esos clientes
       const clientesData = await Promise.all(
         idClientesUnicos.map((id) => citasService.getCliente(id)),
       );
 
-      // Crear un mapa para búsqueda rápida
       const clienteMap = new Map(clientesData.map((c) => [c.idCliente, c]));
       const servicioMap = new Map(serviciosData.map((s) => [s.idServicio, s]));
 
-      // 4. Enriquecer las citas
       const enriquecidas = citasData.map((cita) => {
         const cliente = clienteMap.get(cita.idCliente);
         const servicioId = cita.detalleCitas[0]?.idServicio;

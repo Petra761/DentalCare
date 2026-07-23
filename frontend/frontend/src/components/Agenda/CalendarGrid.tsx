@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface Props {
   citas: any[];
@@ -15,7 +16,6 @@ const CalendarGrid: React.FC<Props> = ({
 }) => {
   const daysHeader = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
   const todayStr = new Date().toISOString().split("T")[0];
-
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -26,12 +26,12 @@ const CalendarGrid: React.FC<Props> = ({
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
   return (
-    <div className="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-      <div className="grid grid-cols-7 bg-surface-container-low border-b border-outline-variant">
+    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]">
+      <div className="grid grid-cols-7 bg-slate-50/50 border-b border-slate-100">
         {daysHeader.map((d) => (
           <div
             key={d}
-            className="py-3 text-center text-[10px] font-bold text-outline"
+            className="py-4 text-center text-[11px] font-extrabold text-slate-400 tracking-widest"
           >
             {d}
           </div>
@@ -44,45 +44,62 @@ const CalendarGrid: React.FC<Props> = ({
             return (
               <div
                 key={`empty-${i}`}
-                className="h-24 border-r border-b border-outline-variant bg-surface-container-low/20"
+                className="h-28 border-r border-b border-slate-50 bg-slate-50/20"
               />
             );
 
           const dateStr = `${year}-${(month + 1).toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
           const isSelected = selectedDate === dateStr;
           const isToday = todayStr === dateStr;
-
-          // Filtrar citas para este día
           const dayCitas = citas.filter(
             (c) => c.fecha && c.fecha.startsWith(dateStr),
           );
 
           return (
-            <div
+            <motion.div
               key={dateStr}
+              whileHover={{ backgroundColor: "#fcfdff" }}
               onClick={() => onDateSelect(dateStr)}
-              className={`h-24 p-2 border-r border-b border-outline-variant cursor-pointer transition-all relative flex flex-col
-                ${isSelected ? "bg-primary/10" : "bg-white hover:bg-surface-container-low"}`}
+              className={`h-28 p-3 border-r border-b border-slate-100 cursor-pointer transition-all relative flex flex-col group
+                ${isSelected ? "bg-primary/[0.03]" : "bg-white"}`}
             >
-              <span
-                className={`text-xs font-bold z-20 w-7 h-7 flex items-center justify-center rounded-full transition-colors
-                ${isSelected ? "bg-primary text-white shadow-md" : isToday ? "bg-secondary text-white shadow-sm" : "text-on-surface hover:bg-surface-container"}`}
-              >
-                {day}
-              </span>
-
-              {/* CONTENEDOR DE PUNTOS: Aseguramos visibilidad */}
-              <div className="mt-auto mb-1 flex flex-wrap justify-center gap-1 z-20 min-h-[8px]">
-                {dayCitas.length > 0 &&
-                  dayCitas.map((_, idx) => (
-                    <span
-                      key={idx}
-                      className="w-2 h-2 rounded-full border border-white shadow-sm"
-                      style={{ backgroundColor: "#009688", opacity: 1 }} // Verde Primary sólido
-                    />
-                  ))}
+              <div className="flex justify-between items-start">
+                <span
+                  className={`text-sm font-bold w-8 h-8 flex items-center justify-center rounded-xl transition-all
+                  ${
+                    isSelected
+                      ? "bg-[#009688] text-white shadow-lg shadow-primary/30 rotate-3"
+                      : isToday
+                        ? "bg-amber-100 text-amber-700"
+                        : "text-slate-600 group-hover:text-primary"
+                  }`}
+                >
+                  {day}
+                </span>
+                {isToday && !isSelected && (
+                  <span className="text-[10px] font-black text-amber-500 uppercase">
+                    Hoy
+                  </span>
+                )}
               </div>
-            </div>
+
+              <div className="mt-auto flex flex-wrap gap-1.5 min-h-[12px]">
+                {dayCitas.map((_, idx) => (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    key={idx}
+                    className="w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm bg-[#009688]"
+                  />
+                ))}
+              </div>
+              {isSelected && (
+                <motion.div
+                  layoutId="activeDay"
+                  className="absolute inset-0 border-2 border-[#009688] pointer-events-none rounded-none z-10"
+                />
+              )}
+            </motion.div>
           );
         })}
       </div>

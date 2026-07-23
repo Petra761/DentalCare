@@ -10,9 +10,9 @@ export interface Cita {
   idUsuario: number;
   codigo: string;
   medioComunicacion: string;
-  fecha: string; // "2026-07-23"
-  hora: string; // "08:00"
-  estadoCita: string; // "Confirmada", "Pendiente", etc.
+  fecha: string;
+  hora: string;
+  estadoCita: string;
   estado: string;
   detalleCitas: DetalleCita[];
   nombrePaciente?: string;
@@ -33,7 +33,6 @@ export interface Servicio {
   codigo: string;
 }
 
-// Extendemos la Cita para que la UI sea fácil de pintar
 export interface CitaEnriquecida extends Cita {
   nombrePaciente?: string;
   nombreServicio?: string;

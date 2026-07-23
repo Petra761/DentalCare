@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
   citas: any[];
@@ -11,131 +12,91 @@ const DailyTimeline: React.FC<Props> = ({ citas, selectedDate }) => {
     weekday: "long",
     day: "numeric",
     month: "long",
-    year: "numeric",
   });
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
-    <div className="bg-[#f0f9fa] border border-primary/10 rounded-xl p-6 flex-1 shadow-sm min-h-[400px] flex flex-col agenda-container">
-      {/* Encabezado visible solo en Impresión */}
-      <div className="hidden print:block mb-8 border-b-2 border-primary pb-4">
-        <h1 className="text-2xl font-black text-primary uppercase">
-          Reporte de Agenda Diaria
-        </h1>
-        <p className="text-sm text-outline font-bold">Clínica Odontológica</p>
-      </div>
+    <div className="bg-white border border-slate-200 rounded-3xl p-8 flex-1 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] min-h-[500px] flex flex-col agenda-container relative overflow-hidden">
+      {/* Círculo decorativo de fondo */}
+      <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/[0.03] rounded-full pointer-events-none" />
 
-      <div className="mb-6 flex justify-between items-start">
+      <div className="mb-8 flex justify-between items-center relative z-10">
         <div>
-          <p className="text-[10px] uppercase font-bold text-primary tracking-widest mb-1">
-            AGENDA DEL DÍA
+          <p className="text-[11px] uppercase font-black text-primary tracking-[0.2em] mb-2 opacity-70">
+            Agenda Diaria
           </p>
-          <h3 className="text-xl font-bold text-secondary capitalize">
+          <h3 className="text-2xl font-black text-slate-800 capitalize leading-tight">
             {formattedDate}
           </h3>
         </div>
-
-        {/* Botón de impresión (se oculta al imprimir) */}
-        <button
-          onClick={handlePrint}
-          className="print:hidden p-2 bg-white hover:bg-primary/10 rounded-full text-primary transition-all shadow-sm border border-outline-variant"
-          title="Imprimir Agenda"
+        <motion.button
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => window.print()}
+          className="print:hidden w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-primary hover:text-white rounded-2xl transition-all shadow-sm"
         >
-          <span className="material-symbols-outlined">print</span>
-        </button>
+          <span className="material-symbols-outlined text-[22px]">print</span>
+        </motion.button>
       </div>
 
-      <div className="space-y-4 relative flex-1">
-        {/* Línea de tiempo (se oculta al imprimir para limpieza visual) */}
-        <div className="absolute left-[7px] top-4 bottom-4 w-px bg-primary/20 border-l border-dashed border-primary/40 print:hidden"></div>
-
-        {citas.length === 0 ? (
-          /* RECORDATORIO SI NO HAY CITAS */
-          <div className="pl-8 print:pl-0 py-12 flex flex-col items-center text-center">
-            <span className="material-symbols-outlined text-outline/20 text-7xl mb-4">
-              calendar_today
-            </span>
-            <div className="bg-white print:border print:border-dashed print:border-outline-variant p-6 rounded-xl w-full">
-              <p className="text-lg font-bold text-on-surface-variant">
-                Sin citas programadas
-              </p>
-              <p className="text-sm text-outline mt-1">
-                No se encontraron registros de atención para el día
-                seleccionado.
-              </p>
-            </div>
-          </div>
-        ) : (
-          /* LISTADO DE CITAS */
-          citas.map((cita) => (
-            <div key={cita.idCita} className="relative pl-8 print:pl-0">
-              {/* Punto de la línea (se oculta al imprimir) */}
-              <div className="absolute left-0 top-2 w-3.5 h-3.5 rounded-full border-2 border-white bg-primary print:hidden"></div>
-
-              <div className="bg-white p-4 rounded-lg border border-outline-variant shadow-sm print:shadow-none print:border-b print:rounded-none">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-black text-primary">
-                    {cita.hora}
-                  </span>
-                  <span className="px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-bold rounded uppercase print:border print:border-primary">
-                    {cita.estadoCita}
-                  </span>
-                </div>
-                <p className="font-bold text-sm text-on-surface uppercase">
-                  {cita.nombrePaciente}
-                </p>
-                <p className="text-[11px] text-outline flex items-center gap-1 mt-1">
-                  <span className="material-symbols-outlined text-[14px] print:hidden">
-                    dentistry
-                  </span>
-                  <span className="font-medium">Tratamiento:</span>{" "}
-                  {cita.nombreServicio}
-                </p>
+      <div className="space-y-6 relative flex-1 z-10">
+        <AnimatePresence mode="popLayout">
+          {citas.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="py-20 flex flex-col items-center text-center"
+            >
+              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-slate-300 text-5xl">
+                  event_busy
+                </span>
               </div>
-            </div>
-          ))
-        )}
+              <p className="text-lg font-bold text-slate-700">Día libre</p>
+              <p className="text-sm text-slate-400 max-w-[200px]">
+                No tienes citas programadas para hoy.
+              </p>
+            </motion.div>
+          ) : (
+            citas.map((cita, index) => (
+              <motion.div
+                key={cita.idCita}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="group relative pl-6 border-l-2 border-slate-100 hover:border-primary transition-all"
+              >
+                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full border-4 border-white bg-slate-200 group-hover:bg-primary transition-all" />
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-xs font-black text-primary bg-primary/5 px-3 py-1 rounded-lg tracking-wider">
+                      {cita.hora}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter border border-slate-100 px-2 py-0.5 rounded-md">
+                      {cita.estadoCita}
+                    </span>
+                  </div>
+                  <h4 className="font-extrabold text-slate-800 mb-1 group-hover:text-primary transition-colors uppercase tracking-tight">
+                    {cita.nombrePaciente}
+                  </h4>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium italic">
+                    <span className="material-symbols-outlined text-[16px]">
+                      medical_services
+                    </span>
+                    {cita.nombreServicio}
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Pie de página en impresión */}
-      <div className="hidden print:block mt-auto pt-8 text-[10px] text-outline text-center border-t border-outline-variant">
-        Documento generado automáticamente por el Sistema de Gestión de Agenda -{" "}
-        {new Date().toLocaleString()}
-      </div>
-
-      {/* ESTILOS CSS PARA LA IMPRESIÓN */}
       <style>{`
         @media print {
-          /* Ocultar todo excepto el contenedor de la agenda */
-          body * {
-            visibility: hidden;
-          }
-          .agenda-container, .agenda-container * {
-            visibility: visible;
-          }
-          /* Posicionar la agenda al inicio de la página */
-          .agenda-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            background: white !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-          }
-          /* Forzar que los colores de fondo se impriman */
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          /* Evitar saltos de página a mitad de una cita */
-          .bg-white {
-            page-break-inside: avoid;
-          }
+          body * { visibility: hidden; }
+          .agenda-container, .agenda-container * { visibility: visible; }
+          .agenda-container { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; }
+          .print\:hidden { display: none !important; }
         }
       `}</style>
     </div>

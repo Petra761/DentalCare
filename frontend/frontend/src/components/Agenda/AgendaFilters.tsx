@@ -1,5 +1,3 @@
-import { type Servicio } from "../../types/AgendaPage";
-
 import React from "react";
 
 interface Props {
@@ -15,52 +13,47 @@ const AgendaFilters: React.FC<Props> = ({
   onTratamientoChange,
   onClear,
 }) => (
-  <div className="bg-white border border-outline-variant rounded-xl p-4 mb-6 flex items-center gap-4 shadow-sm">
-    {/* Filtro Paciente */}
-    <div className="flex-[2] relative">
-      <span className="absolute inset-y-0 left-3 flex items-center text-outline pointer-events-none">
-        <span className="material-symbols-outlined text-[20px]">person</span>
+  <div className="bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-5 mb-8 flex flex-wrap lg:flex-nowrap items-center gap-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+    <div className="flex-1 relative group min-w-[250px]">
+      <span className="absolute inset-y-0 left-4 flex items-center text-slate-400 group-focus-within:text-primary transition-colors">
+        <span className="material-symbols-outlined text-[20px]">search</span>
       </span>
       <input
         type="text"
-        placeholder="Buscar paciente..."
+        placeholder="Buscar por nombre del paciente..."
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full pl-11 pr-4 py-2.5 text-sm bg-surface-container-low border border-transparent rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all outline-none"
+        className="w-full pl-12 pr-5 py-3.5 text-sm bg-slate-50/50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all outline-none font-medium placeholder:text-slate-300"
       />
     </div>
 
-    {/* Filtro Tratamiento */}
-    <div className="flex-[2] relative">
-      <span className="absolute inset-y-0 left-3 flex items-center text-outline pointer-events-none">
-        <span className="material-symbols-outlined text-[20px]">
-          medical_services
-        </span>
+    <div className="flex-1 relative group min-w-[200px]">
+      <span className="absolute inset-y-0 left-4 flex items-center text-slate-400 group-focus-within:text-primary transition-colors">
+        <span className="material-symbols-outlined text-[20px]">category</span>
       </span>
       <select
         onChange={(e) => onTratamientoChange(e.target.value)}
-        className="w-full pl-11 pr-10 py-2.5 text-sm bg-surface-container-low border border-transparent rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+        className="w-full pl-12 pr-10 py-3.5 text-sm bg-slate-50/50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all outline-none appearance-none cursor-pointer font-medium text-slate-600"
       >
-        <option value="">Todos los Tratamientos</option>
+        <option value="">Especialidad / Tratamiento</option>
         {servicios.map((s) => (
           <option key={s.idServicio} value={s.idServicio}>
             {s.nombre}
           </option>
         ))}
       </select>
-      <span className="absolute inset-y-0 right-3 flex items-center text-outline pointer-events-none">
-        <span className="material-symbols-outlined text-[18px]">
-          expand_more
-        </span>
+      <span className="absolute inset-y-0 right-4 flex items-center text-slate-300 pointer-events-none">
+        <span className="material-symbols-outlined">expand_more</span>
       </span>
     </div>
 
-    {/* Botón Limpiar */}
     <button
       onClick={onClear}
-      className="flex items-center gap-2 text-error text-xs font-bold hover:bg-error/5 px-4 py-2.5 rounded-lg transition-all border border-transparent hover:border-error/20"
+      className="flex items-center gap-2 text-slate-400 hover:text-red-500 font-bold text-xs px-5 py-3.5 rounded-xl transition-all hover:bg-red-50"
     >
-      <span className="material-symbols-outlined text-[18px]">close</span>
-      Limpiar Filtros
+      <span className="material-symbols-outlined text-[18px]">
+        filter_alt_off
+      </span>
+      Limpiar
     </button>
   </div>
 );

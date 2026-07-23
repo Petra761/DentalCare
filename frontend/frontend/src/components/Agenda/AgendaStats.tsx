@@ -14,7 +14,6 @@ const AgendaStats: React.FC<AgendaStatsProps> = ({ stats }) => {
         Resumen Mensual
       </h4>
       <div className="grid grid-cols-2 gap-4">
-        {/* Card: Citas Totales */}
         <div className="border border-outline-variant rounded-lg p-3 bg-surface-container-low transition-all hover:border-primary/30">
           <p className="text-[10px] text-outline font-bold mb-1 uppercase">
             Citas Totales
@@ -22,7 +21,6 @@ const AgendaStats: React.FC<AgendaStatsProps> = ({ stats }) => {
           <p className="text-2xl font-black text-primary">{stats.totales}</p>
         </div>
 
-        {/* Card: Porcentaje de Confirmación */}
         <div className="border border-outline-variant rounded-lg p-3 bg-surface-container-low transition-all hover:border-secondary/30">
           <p className="text-[10px] text-outline font-bold mb-1 uppercase">
             Confirmadas
@@ -33,7 +31,6 @@ const AgendaStats: React.FC<AgendaStatsProps> = ({ stats }) => {
         </div>
       </div>
 
-      {/* Mini barra de progreso visual (Opcional, para mejorar el diseño) */}
       <div className="mt-4 w-full bg-outline-variant rounded-full h-1.5 overflow-hidden">
         <div
           className="bg-secondary h-full transition-all duration-500"
