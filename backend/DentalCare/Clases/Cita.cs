@@ -24,5 +24,6 @@ namespace DentalCare.Clases
         [ForeignKey("IdUsuario")]
         [JsonIgnore]
         public Usuario? Usuario { get; set; }
+        public ICollection<DetalleCita> DetalleCitas { get; set; } = new List<DetalleCita>();
     }
 }

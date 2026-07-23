@@ -19,7 +19,7 @@ export const Login: React.FC = () => {
 
     try {
       await login(nombreUsuario, contrasena);
-      navigate('/dashboard');
+      navigate('/gestion-citas');
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.');
     } finally {

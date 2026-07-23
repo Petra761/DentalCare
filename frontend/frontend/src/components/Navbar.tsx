@@ -40,8 +40,8 @@ export const Navbar: React.FC = () => {
         <div className="nav-desktop-links" style={styles.desktopLinks}>
           {isAuthenticated && (
             <>
-              <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                Mi Cuenta / Panel
+              <NavLink to="/gestion-citas" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                Gestión de Citas
               </NavLink>
               <div style={styles.userInfo}>
                 <User size={16} />
@@ -77,8 +77,8 @@ export const Navbar: React.FC = () => {
       {/* Mobile Menu Drawer */}
       {mobileOpen && isAuthenticated && (
         <div style={styles.mobileMenu}>
-          <NavLink to="/dashboard" style={styles.mobileLink} onClick={() => setMobileOpen(false)}>
-            Mi Cuenta ({user?.nombreUsuario})
+          <NavLink to="/gestion-citas" style={styles.mobileLink} onClick={() => setMobileOpen(false)}>
+            Gestión de Citas (${user?.nombreUsuario})
           </NavLink>
           <button onClick={handleLogout} className="btn btn-secondary btn-sm" style={{ ...styles.mobileLink, width: '100%' }}>
             <LogOut size={16} />
