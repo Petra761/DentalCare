@@ -54,7 +54,7 @@ export const Register: React.FC = () => {
             <p style={styles.successDesc}>
               Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión con tus credenciales.
             </p>
-            <Link to="/login" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+            <Link to="/" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
               Ir a Iniciar Sesión
             </Link>
           </div>
