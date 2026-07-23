@@ -1,80 +1,86 @@
 import React from "react";
-import { type Cita } from "../../types/AgendaPage";
+
 interface Props {
-  citas: Cita[];
+  citas: any[];
   selectedDate: string;
+  viewDate: Date;
   onDateSelect: (date: string) => void;
 }
 
 const CalendarGrid: React.FC<Props> = ({
   citas,
   selectedDate,
+  viewDate,
   onDateSelect,
 }) => {
-  const days = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+  const daysHeader = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+  const todayStr = new Date().toISOString().split("T")[0];
 
-  // Usamos el mes de la fecha seleccionada para construir el calendario
-  // Si selectedDate es "2026-07-24", extraeremos "2026-07"
-  const yearMonth = selectedDate.substring(0, 7);
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const calendarDays = [];
+  for (let i = 0; i < firstDayOfMonth; i++) calendarDays.push(null);
+  for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
   return (
-    <div className="bg-white border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+    <div className="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
       <div className="grid grid-cols-7 bg-surface-container-low border-b border-outline-variant">
-        {days.map((day) => (
+        {daysHeader.map((d) => (
           <div
-            key={day}
+            key={d}
             className="py-3 text-center text-[10px] font-bold text-outline"
           >
-            {day}
+            {d}
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-7">
-        {[...Array(31)].map((_, i) => {
-          const dayNum = i + 1;
-          const dayDate = `${yearMonth}-${dayNum.toString().padStart(2, "0")}`;
+        {calendarDays.map((day, i) => {
+          if (day === null)
+            return (
+              <div
+                key={`empty-${i}`}
+                className="h-24 border-r border-b border-outline-variant bg-surface-container-low/20"
+              />
+            );
 
-          // COMPARACIÓN ROBUSTA:
-          // Usamos .startsWith() por si la fecha de la API viene como "2026-07-24T00:00:00"
+          const dateStr = `${year}-${(month + 1).toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+          const isSelected = selectedDate === dateStr;
+          const isToday = todayStr === dateStr;
+
+          // Filtrar citas para este día
           const dayCitas = citas.filter(
-            (c) => c.fecha && c.fecha.startsWith(dayDate),
+            (c) => c.fecha && c.fecha.startsWith(dateStr),
           );
-
-          const isSelected = selectedDate === dayDate;
 
           return (
             <div
-              key={i}
-              onClick={() => onDateSelect(dayDate)}
-              className={`
-                h-24 p-2 border-r border-b border-outline-variant cursor-pointer transition-all relative flex flex-col
-                ${isSelected ? "bg-primary/5" : "bg-white hover:bg-surface-container-low"}
-              `}
+              key={dateStr}
+              onClick={() => onDateSelect(dateStr)}
+              className={`h-24 p-2 border-r border-b border-outline-variant cursor-pointer transition-all relative flex flex-col
+                ${isSelected ? "bg-primary/10" : "bg-white hover:bg-surface-container-low"}`}
             >
-              {/* Indicador de Selección (Borde Interno) */}
-              {isSelected && (
-                <div className="absolute inset-0 border-2 border-primary pointer-events-none z-10" />
-              )}
-
               <span
-                className={`text-xs font-bold z-20 ${isSelected ? "text-primary" : "text-on-surface"}`}
+                className={`text-xs font-bold z-20 w-7 h-7 flex items-center justify-center rounded-full transition-colors
+                ${isSelected ? "bg-primary text-white shadow-md" : isToday ? "bg-secondary text-white shadow-sm" : "text-on-surface hover:bg-surface-container"}`}
               >
-                {dayNum}
+                {day}
               </span>
 
-              {/* CONTENEDOR DE PUNTOS CORREGIDO */}
-              <div className="mt-auto mb-1 flex flex-wrap justify-center gap-1 z-20">
-                {dayCitas.map((cita, idx) => (
-                  <span
-                    key={cita.idCita || idx}
-                    className="w-2 h-2 rounded-full border border-white shadow-sm"
-                    style={{
-                      backgroundColor: "#009688", // Forzamos el color Primary de tu config
-                      display: "block",
-                    }}
-                  />
-                ))}
+              {/* CONTENEDOR DE PUNTOS: Aseguramos visibilidad */}
+              <div className="mt-auto mb-1 flex flex-wrap justify-center gap-1 z-20 min-h-[8px]">
+                {dayCitas.length > 0 &&
+                  dayCitas.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className="w-2 h-2 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: "#009688", opacity: 1 }} // Verde Primary sólido
+                    />
+                  ))}
               </div>
             </div>
           );
