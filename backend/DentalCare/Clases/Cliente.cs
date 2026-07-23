@@ -14,5 +14,7 @@ namespace DentalCare.Clases
         public string TipoSangre { get; set; } = string.Empty;
         public DateOnly FechaNacimiento { get; set; } = new DateOnly();
         public string Estado { get; set; } = "Activo";
+
+        public virtual ICollection<AlergiaCliente> AlergiaClientes { get; set; } = new List<AlergiaCliente>();
     }
 }
