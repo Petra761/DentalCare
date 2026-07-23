@@ -61,6 +61,8 @@ $RECYCLE.BIN/
 .env.*.local
 appsettings.Development.json
 appsettings.Local.json
+google-credentials.json
+dentalcare-*.json
 
 ### Supabase (si aplica) ###
 .supabase/
