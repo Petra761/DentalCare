@@ -402,9 +402,22 @@ export const apiService = {
       localStorage.setItem('dental_db_clientes', JSON.stringify(defaultMock));
       return defaultMock;
     }
-    const res = await fetch(`${BASE_URL}/Clientes`, { headers: getHeaders() });
+    const res = await fetch(`${BASE_URL}/Clientes?pagina=1&limite=1000`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Error al obtener clientes');
-    return await res.json();
+    const data = await res.json();
+    // Backend devuelve { TotalPacientes, PaginaActual, PaginasTotales, Pacientes: [...] }
+    // Mapear de PascalCase (backend) a camelCase (frontend)
+    return (data.pacientes || data.Pacientes || []).map((p: any) => ({
+      idCliente: p.idCliente || p.IdCliente,
+      ci: p.ci || p.Ci,
+      nombre: (p.nombre || p.Nombre || (p.nombreCompleto || p.NombreCompleto || '').split(' ')[0] || ''),
+      apellidoPaterno: (p.apellidoPaterno || p.ApellidoPaterno || (p.nombreCompleto || p.NombreCompleto || '').split(' ')[1] || ''),
+      apellidoMaterno: (p.apellidoMaterno || p.ApellidoMaterno || (p.nombreCompleto || p.NombreCompleto || '').split(' ').slice(2).join(' ') || ''),
+      tipoSangre: p.tipoSangre || p.TipoSangre || 'No especificado',
+      telefono: p.telefono || p.Telefono || '',
+      fechaNacimiento: p.fechaNacimiento || p.FechaNacimiento || '2000-01-01',
+      estado: p.estado || p.Estado || 'Activo'
+    }));
   },
 
   async getCategorias(): Promise<Categoria[]> {
