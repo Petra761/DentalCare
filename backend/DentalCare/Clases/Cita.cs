@@ -16,6 +16,7 @@ namespace DentalCare.Clases
         public TimeOnly Hora { get; set; } = new TimeOnly();
         public string EstadoCita { get; set; } = "Pendiente";
         public string Estado { get; set; } = "Activo";
+        public string? GoogleEventId { get; set; }
 
         [ForeignKey("IdCliente")]
         [JsonIgnore]
