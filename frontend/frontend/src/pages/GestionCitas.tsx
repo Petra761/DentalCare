@@ -6,7 +6,6 @@ import type { Cliente, Servicio, Categoria, DbCita, NuevaCitaDto } from '../serv
 import { Modal } from '../components/Modal';
 import { ApptForm } from '../components/ApptForm';
 
-// ─── Design tokens (exact colors from original project) ────────────────────────
 const C = {
   primary:     '#009688',
   primaryHov:  '#00796B',
@@ -25,12 +24,12 @@ const C = {
   shadowModal: '0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04)',
 };
 
-// ─── Status badge ───────────────────────────────────────────────────────────────
 const STATUS_STYLES: Record<string, {bg:string; color:string}> = {
   pendiente:  { bg:'#E2E8F0', color:'#475569' },
   confirmada: { bg:'#E0F2F1', color:'#00796B' },
   cancelada:  { bg:'#FFEBEE', color:'#C62828' },
   completada: { bg:'#E0F2F1', color:'#004D40' },
+  reagendado: { bg:'#FFF3E0', color:'#E65100' },
 };
 
 const StatusPill: React.FC<{status:string}> = ({ status }) => {
@@ -47,7 +46,6 @@ const StatusPill: React.FC<{status:string}> = ({ status }) => {
   );
 };
 
-// ─── Avatar ─────────────────────────────────────────────────────────────────────
 const AVATAR_COLORS = ['#009688','#00796B','#004D40','#0288D1','#7B1FA2','#E64A19','#388E3C','#F57C00'];
 const pickColor = (s:string) => AVATAR_COLORS[s.charCodeAt(0) % AVATAR_COLORS.length];
 
@@ -63,7 +61,6 @@ const Avatar: React.FC<{initials:string}> = ({ initials }) => (
   </div>
 );
 
-// ─── Helpers ────────────────────────────────────────────────────────────────────
 const fmtDate = (d:string) => {
   if(!d) return '';
   const [y,m,day] = d.split('-');
@@ -77,17 +74,14 @@ const fmtTime = (t:string) => {
   return `${hr.toString().padStart(2,'0')}:${min} ${hr>=12?'PM':'AM'}`;
 };
 
-/** Returns true if the appointment's date+time is in the past AND status is still Pendiente or Confirmada */
 const isOverdue = (fecha:string, hora:string, estadoCita:string): boolean => {
   if (estadoCita !== 'Pendiente' && estadoCita !== 'Confirmada') return false;
   const apptDate = new Date(`${fecha}T${hora}`);
   return apptDate < new Date();
 };
 
-
-
-// ─── Main page ───────────────────────────────────────────────────────────────────
-type Filter = 'Todas'|'Pendiente'|'Confirmada'|'Cancelada';
+type Filter = 'Todas'|'Pendiente'|'Confirmada'|'Cancelada'|'Completada'|'Reagendado';
+type DateFilter = 'Todas' | 'Hoy' | 'Semana' | 'Mes';
 type Tab = 'agenda' | 'historial';
 
 export const GestionCitas: React.FC = () => {
@@ -103,9 +97,9 @@ export const GestionCitas: React.FC = () => {
   const [loading,      setLoading]      = useState(true);
   const [tab,          setTab]          = useState<Tab>('agenda');
   const [filter,       setFilter]       = useState<Filter>('Todas');
+  const [dateFilter,   setDateFilter]   = useState<DateFilter>('Todas');
   const [query,        setQuery]        = useState('');
 
-  // modal states
   const [showNew,      setShowNew]      = useState(false);
   const [editCita,     setEditCita]     = useState<DbCita|null>(null);
 
@@ -128,11 +122,53 @@ export const GestionCitas: React.FC = () => {
   };
 
   const loadCitas = async (cli:Cliente[], srv:Servicio[]) => {
-    const [raw, detalles] = await Promise.all([
+    const [raw, historialRaw, detalles] = await Promise.all([
       apiService.getDbCitas(),
+      apiService.getHistorial(),
       apiService.getDetallesCita(),
     ]);
-    const mapped = raw.map(c => {
+
+    const autoCompleted: number[] = [];
+    for (const c of raw) {
+      if (c.estadoCita === 'Confirmada' && isOverdue(c.fecha, c.hora, c.estadoCita)) {
+        try {
+          await fetch(`http://localhost:5020/api/Citas/${c.idCita}/estado`, {
+            method: 'PATCH',
+            headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify({ estadoCita: 'Completada' }),
+          });
+          autoCompleted.push(c.idCita);
+        } catch {}
+      }
+    }
+
+    if (autoCompleted.length > 0) {
+      const [raw2, historial2] = await Promise.all([
+        apiService.getDbCitas(),
+        apiService.getHistorial(),
+      ]);
+      const rawMapped2 = (c: DbCita) => {
+        const client  = cli.find(x => x.idCliente === c.idCliente);
+        const detail  = detalles.find(d => d.idCita === c.idCita);
+        const service = detail ? srv.find(s => s.idServicio === detail.idServicio) : null;
+        return {
+          ...c,
+          clientName:    client ? `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno}`.trim() : 'Desconocido',
+          clientCi:      client ? client.ci.toString() : 'N/A',
+          clientFirstChar: client ? `${client.nombre[0]}${client.apellidoPaterno[0]}` : 'NA',
+          serviceName:   service ? service.nombre : 'No asignado',
+          _clientObj:    client  ?? null,
+          _serviceObj:   service ?? null,
+          _hora:         c.hora,
+        } as DbCita & { _clientObj:Cliente|null; _serviceObj:Servicio|null; _hora:string };
+      };
+      const mapped2 = [...raw2, ...historial2].map(rawMapped2);
+      mapped2.sort((a,b) => new Date(`${b.fecha}T${b.hora}`).getTime() - new Date(`${a.fecha}T${a.hora}`).getTime());
+      setAppointments(mapped2 as DbCita[]);
+      return;
+    }
+
+    const rawMapped = (c: DbCita) => {
       const client  = cli.find(x => x.idCliente === c.idCliente);
       const detail  = detalles.find(d => d.idCita === c.idCita);
       const service = detail ? srv.find(s => s.idServicio === detail.idServicio) : null;
@@ -146,12 +182,12 @@ export const GestionCitas: React.FC = () => {
         _serviceObj:   service ?? null,
         _hora:         c.hora,
       } as DbCita & { _clientObj:Cliente|null; _serviceObj:Servicio|null; _hora:string };
-    });
+    };
+    const mapped = [...raw, ...historialRaw].map(rawMapped);
     mapped.sort((a,b) => new Date(`${b.fecha}T${b.hora}`).getTime() - new Date(`${a.fecha}T${a.hora}`).getTime());
     setAppointments(mapped as DbCita[]);
   };
 
-  // Create new appointment
   const handleNew = async (data:{client:Cliente;service:Servicio;fecha:string;hora:string;medio:string;estado:string}) => {
     const session = localStorage.getItem('dental_session');
     let userId = 1;
@@ -164,19 +200,17 @@ export const GestionCitas: React.FC = () => {
       fecha:             data.fecha,
       hora:              `${data.hora}:00`,
       idServicio:        data.service.idServicio,
-      estadoCita:        data.estado, // passed directly — backend respects it
+      estadoCita:        data.estado,
     };
     await apiService.crearNuevaCita(dto);
     setShowNew(false);
     await loadCitas(clients, services);
   };
 
-  // Edit/Gestionar existing appointment
   const handleEdit = async (data:{client:Cliente;service:Servicio;fecha:string;hora:string;medio:string;estado:string}) => {
     if(!editCita) return;
 
     if(apiService.isMock()) {
-      // Mock mode: check for time conflicts first
       const dbCitas = await apiService.getDbCitas();
       const dbDetalles = await apiService.getDetallesCita();
       const dbServicios = await apiService.getServicios();
@@ -213,7 +247,6 @@ export const GestionCitas: React.FC = () => {
         }
       }
 
-      // No conflict — save
       const citas = dbCitas;
       const idx   = citas.findIndex(c => c.idCita === editCita.idCita);
       if(idx !== -1) {
@@ -235,7 +268,6 @@ export const GestionCitas: React.FC = () => {
         }
       }
     } else {
-      // Live mode: update all fields via PUT, includes estadoCita and idServicio
       const res = await fetch(`http://localhost:5020/api/Citas/${editCita.idCita}`, {
         method: 'PUT',
         headers: { 'Content-Type':'application/json' },
@@ -263,30 +295,61 @@ export const GestionCitas: React.FC = () => {
     await loadCitas(clients, services);
   };
 
-
-
-  // ── Agenda: Pendiente, Confirmada, Cancelada (citas activas/pendientes)
-  // ── Historial: Completada (citas cerradas, solo consulta)
-  const agendaCitas = appointments.filter(c => c.estadoCita !== 'Completada');
-  const historialCitas = appointments.filter(c => c.estadoCita === 'Completada');
+  const agendaCitas = appointments.filter(c =>
+    c.estadoCita === 'Pendiente' || c.estadoCita === 'Confirmada'
+  );
+  const historialCitas = appointments.filter(c =>
+    c.estadoCita === 'Completada' || c.estadoCita === 'Cancelada' || c.estadoCita === 'Reagendado'
+  );
 
   const currentPool = tab === 'agenda' ? agendaCitas : historialCitas;
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const matchDate = (fecha: string): boolean => {
+    if (dateFilter === 'Todas') return true;
+    if (dateFilter === 'Hoy') return fecha === todayStr;
+    const d = new Date(fecha + 'T00:00:00');
+    const now = new Date();
+    if (dateFilter === 'Semana') {
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      return d >= weekStart && d <= weekEnd;
+    }
+    if (dateFilter === 'Mes') {
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }
+    return true;
+  };
+
   const filtered = currentPool.filter(c => {
-    const matchF = tab === 'historial' ? true : (filter === 'Todas' || c.estadoCita === filter);
+    const matchF = filter === 'Todas' || c.estadoCita === filter;
+    const matchD = matchDate(c.fecha);
     const q      = query.toLowerCase().trim();
     const matchQ = !q || (c.clientName||'').toLowerCase().includes(q) || (c.clientCi||'').includes(q);
-    return matchF && matchQ;
+    return matchF && matchD && matchQ;
   });
 
   const AGENDA_FILTERS: {label:string; value:Filter}[] = [
     {label:'Todos',      value:'Todas'},
     {label:'Pendiente',  value:'Pendiente'},
     {label:'Confirmada', value:'Confirmada'},
+  ];
+
+  const HISTORIAL_FILTERS: {label:string; value:Filter}[] = [
+    {label:'Todos',      value:'Todas'},
+    {label:'Completada', value:'Completada'},
     {label:'Cancelada',  value:'Cancelada'},
   ];
 
-  // Build initial data for edit modal
+  const DATE_FILTERS: {label:string; value:DateFilter}[] = [
+    {label:'Todas', value:'Todas'},
+    {label:'Hoy',   value:'Hoy'},
+    {label:'Semana',value:'Semana'},
+    {label:'Mes',   value:'Mes'},
+  ];
+
   const editInitial = editCita ? (() => {
     const any = editCita as any;
     return {
@@ -301,7 +364,6 @@ export const GestionCitas: React.FC = () => {
 
   return (
     <>
-      {/* Inject slideUp animation */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         @keyframes slideUp {
@@ -330,7 +392,6 @@ export const GestionCitas: React.FC = () => {
         lineHeight:1.5, WebkitFontSmoothing:'antialiased',
       }}>
 
-        {/* ── Main content ─────────────────────────────────── */}
         <div style={{
           maxWidth:1200, margin:'0 auto', padding:'0 24px',
           animation:'fadeIn 0.4s ease-out',
@@ -339,10 +400,10 @@ export const GestionCitas: React.FC = () => {
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24}}>
             <div>
               <h1 style={{fontSize:28, fontWeight:700, color:C.textMain, marginBottom:6}}>
-                Gestión de Citas
+                Gesti&oacute;n de Citas
               </h1>
               <p style={{fontSize:15, color:C.textMuted}}>
-                Administra y organiza el flujo de pacientes del día.
+                Administra y organiza el flujo de pacientes del d&iacute;a.
               </p>
             </div>
             {tab === 'agenda' && (
@@ -359,7 +420,7 @@ export const GestionCitas: React.FC = () => {
             )}
           </div>
 
-          {/* ── Tabs ─────────────────────────────────── */}
+          {/* Tabs */}
           <div style={{
             display:'flex', gap:0, marginBottom:24,
             borderBottom:`2px solid ${C.border}`,
@@ -367,7 +428,7 @@ export const GestionCitas: React.FC = () => {
             {([['agenda','Agenda',agendaCitas.length],['historial','Historial',historialCitas.length]] as const).map(([val,lbl,count]) => (
               <button
                 key={val}
-                onClick={() => { setTab(val); setFilter('Todas'); setQuery(''); }}
+                onClick={() => { setTab(val); setFilter('Todas'); setDateFilter('Todas'); setQuery(''); }}
                 style={{
                   fontFamily:'inherit', fontSize:14, fontWeight:600,
                   padding:'10px 22px', border:'none', background:'none',
@@ -391,8 +452,7 @@ export const GestionCitas: React.FC = () => {
             ))}
           </div>
 
-          {/* Controls — only in Agenda tab */}
-          {tab === 'agenda' && (
+          {/* Controls */}
           <div style={{
             display:'flex', justifyContent:'space-between', alignItems:'center',
             gap:20, marginBottom:24,
@@ -401,14 +461,14 @@ export const GestionCitas: React.FC = () => {
             border:`1px solid ${C.border}`,
           }}>
             {/* Search */}
-            <div style={{position:'relative', flexGrow:1, maxWidth:480}}>
+            <div style={{position:'relative', flexGrow:1, maxWidth:360}}>
               <span style={{
                 position:'absolute', left:16, top:'50%',
                 transform:'translateY(-50%)', color:C.textLight, fontSize:16,
-              }}>🔍</span>
+              }}>&#x1F50D;</span>
               <input
                 type="text"
-                placeholder="Buscar por Nombre del Cliente o CI..."
+                placeholder={tab === 'agenda' ? 'Buscar por Nombre o CI...' : 'Buscar en historial...'}
                 value={query}
                 onChange={e=>setQuery(e.target.value)}
                 style={{
@@ -420,16 +480,38 @@ export const GestionCitas: React.FC = () => {
               />
             </div>
 
-            {/* Filter pills */}
-            <div style={{display:'flex', gap:8}}>
-              {AGENDA_FILTERS.map(f => (
+            {/* Date filter */}
+            <div style={{display:'flex', gap:6, alignItems:'center'}}>
+              <span style={{fontSize:13, color:C.textMuted, fontWeight:500, marginRight:4}}>Fecha:</span>
+              {DATE_FILTERS.map(f => (
+                <button
+                  key={f.value}
+                  onClick={()=>setDateFilter(f.value)}
+                  className="filter-opt"
+                  style={{
+                    fontFamily:'inherit', fontSize:13, fontWeight: dateFilter===f.value?600:500,
+                    padding:'6px 14px', borderRadius:30,
+                    border:'1px solid transparent',
+                    backgroundColor: dateFilter===f.value ? C.primaryLight : 'transparent',
+                    color: dateFilter===f.value ? C.primaryHov : C.textMuted,
+                    cursor:'pointer', transition:'all 0.2s ease',
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Status filter */}
+            <div style={{display:'flex', gap:6}}>
+              {(tab === 'agenda' ? AGENDA_FILTERS : HISTORIAL_FILTERS).map(f => (
                 <button
                   key={f.value}
                   onClick={()=>setFilter(f.value)}
                   className="filter-opt"
                   style={{
-                    fontFamily:'inherit', fontSize:14, fontWeight: filter===f.value?600:500,
-                    padding:'8px 16px', borderRadius:30,
+                    fontFamily:'inherit', fontSize:13, fontWeight: filter===f.value?600:500,
+                    padding:'6px 14px', borderRadius:30,
                     border:'1px solid transparent',
                     backgroundColor: filter===f.value ? C.primaryLight : 'transparent',
                     color: filter===f.value ? C.primaryHov : C.textMuted,
@@ -441,36 +523,6 @@ export const GestionCitas: React.FC = () => {
               ))}
             </div>
           </div>
-          )}
-
-          {/* Search bar for Historial */}
-          {tab === 'historial' && (
-          <div style={{
-            display:'flex', marginBottom:24,
-            backgroundColor:C.bgCard, padding:'16px 24px',
-            borderRadius:12, boxShadow:C.shadowSm,
-            border:`1px solid ${C.border}`,
-          }}>
-            <div style={{position:'relative', flexGrow:1, maxWidth:480}}>
-              <span style={{
-                position:'absolute', left:16, top:'50%',
-                transform:'translateY(-50%)', color:C.textLight, fontSize:16,
-              }}>🔍</span>
-              <input
-                type="text"
-                placeholder="Buscar en historial por Nombre o CI..."
-                value={query}
-                onChange={e=>setQuery(e.target.value)}
-                style={{
-                  width:'100%', padding:'12px 16px 12px 48px', fontFamily:'inherit',
-                  fontSize:14, border:`1px solid ${C.border}`, borderRadius:30,
-                  backgroundColor:'#F1F5F9', color:C.textMain, boxSizing:'border-box',
-                  transition:'all 0.2s ease', outline:'none',
-                }}
-              />
-            </div>
-          </div>
-          )}
 
           {/* Table */}
           <div style={{
@@ -566,7 +618,7 @@ export const GestionCitas: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Nueva Cita Modal ───────────────────────── */}
+        {/* Nueva Cita Modal */}
         {showNew && (
           <Modal
             title="Nueva Cita - Modal"
@@ -585,7 +637,7 @@ export const GestionCitas: React.FC = () => {
           </Modal>
         )}
 
-        {/* ── Gestionar (Edit) Modal ─────────────────── */}
+        {/* Gestionar (Edit) Modal */}
         {editCita && (
           <Modal
             title="Gestionar Cita"

@@ -516,6 +516,13 @@ export const apiService = {
     return await res.json();
   },
 
+  async getHistorial(): Promise<DbCita[]> {
+    if (isMockMode) return [];
+    const res = await fetch(`${BASE_URL}/Citas/historial`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error al obtener historial');
+    return await res.json();
+  },
+
   async getDetallesCita(): Promise<DetalleCita[]> {
     if (isMockMode) {
       const stored = localStorage.getItem('dental_db_detalles');
