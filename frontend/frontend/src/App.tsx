@@ -10,6 +10,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Tratamientos } from "./pages/Tratamientos";
 import { Reportes } from "./pages/Reportes";
 import { Usuarios } from "./pages/Usuarios";
+import AgendaPage from "./pages/AgendaPage"
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           {/* Private Routes */}
           <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
           <Route path="/gestion-citas" element={<Layout><GestionCitas /></Layout>} />
+          <Route path="/agenda" element={<Layout><AgendaPage /></Layout>} />
           <Route path="/pacientes" element={<Layout><PacientesListPage /></Layout>} />
           <Route
             path="/pacientes/nuevo"

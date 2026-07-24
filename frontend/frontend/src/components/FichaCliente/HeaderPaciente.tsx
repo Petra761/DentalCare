@@ -71,14 +71,6 @@ export const PatientHeader: React.FC<PatientHeaderProps> = ({
             <UserPlus size={16} />
             Nuevo Paciente
           </button>
-          
-          <button
-            type="button"
-            className="fc-btn-outline"
-          >
-            <Download size={16} />
-            Exportar Listado
-          </button>
         </div>
       </div>
 
@@ -94,23 +86,21 @@ export const PatientHeader: React.FC<PatientHeaderProps> = ({
           justifyContent: 'space-between',
           boxShadow: '0 10px 15px -3px rgba(0, 77, 64, 0.2)',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          minHeight: '160px'
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: '10px', borderRadius: '12px', backdropFilter: 'blur(4px)' }}>
+          <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', padding: '10px', borderRadius: '12px', backdropFilter: 'blur(4px)' }}>
             <BarChart3 size={20} />
           </div>
-          <span style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', padding: '4px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }}>
-            +12% este mes
-          </span>
         </div>
 
-        <div style={{ marginTop: '24px' }}>
-          <p style={{ margin: '0 0 4px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.8 }}>
+        <div style={{ marginTop: 'auto' }}>
+          <p style={{ margin: '0 0 4px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.7)' }}>
             Total de Pacientes
           </p>
-          <h1 style={{ margin: 0, fontSize: '36px', fontWeight: '800', lineHeight: 1 }}>
+          <h1 style={{ margin: 0, fontSize: '38px', fontWeight: '800', lineHeight: 1, color: '#ffffff' }}>
             {totalPacientes.toLocaleString()}
           </h1>
         </div>
