@@ -1,40 +1,93 @@
 import React from "react";
-import type { DbCita, Cliente, Servicio } from "../../services/api";
-import { MessageCircle, AlertCircle, CheckCircle } from "lucide-react";
+import type { DbCita, Cliente } from "../../services/api";
+import "../../pages/dashboard/Dashboard.css";
+
+import {
+  FaWhatsapp,
+  FaPhone,
+  FaRobot,
+  FaCalendar,
+  FaCheckCircle,
+  FaClock,
+  FaTimesCircle,
+  FaCircle,
+} from "react-icons/fa";
 
 interface RecentReservationsProps {
   citas: DbCita[];
   clientes: Cliente[];
-  servicios: Servicio[];
 }
 
 export const RecentReservations: React.FC<RecentReservationsProps> = ({
   citas,
   clientes,
-  servicios,
 }) => {
   const getClientName = (idCliente: number): string => {
     const cliente = clientes.find((c) => c.idCliente === idCliente);
-    return cliente
-      ? `${cliente.nombre} ${cliente.apellidoPaterno}`
-      : "Cliente desconocido";
+
+    if (!cliente) {
+      return "Cliente desconocido";
+    }
+
+    return (
+      (cliente as any).nombreCompleto ||
+      `${cliente.nombre} ${cliente.apellidoPaterno}`
+    );
   };
 
-  const getServiceName = (idCita: number): string => {
-    const cita = citas.find((c) => c.idCita === idCita);
-    return cita?.serviceName || "Servicio";
-  };
+  const getCommunicationIcon = (medio: string) => {
+    switch (medio?.toUpperCase()) {
+      case "WHATSAPP":
+        return <FaWhatsapp size={22} />;
 
-  const getStatusIcon = (estado: string) => {
-    switch (estado.toUpperCase()) {
-      case "CONFIRMADA":
-        return <MessageCircle size={20} style={{ color: "#10B981" }} />;
-      case "CANCELADA":
-        return <AlertCircle size={20} style={{ color: "#F59E0B" }} />;
-      case "COMPLETADA":
-        return <CheckCircle size={20} style={{ color: "#10B981" }} />;
+      case "RECEPCION":
+      case "RECEPCIÓN":
+        return <FaPhone size={20} />;
+
+      case "BOT":
+        return <FaRobot size={20} />;
+
       default:
-        return <MessageCircle size={20} style={{ color: "#6B7280" }} />;
+        return <FaCalendar size={20} />;
+    }
+  };
+
+  const getStatus = (estado: string) => {
+    switch (estado?.toUpperCase()) {
+      case "CONFIRMADA":
+        return (
+          <span className="reservation-status confirmed">
+            <FaCheckCircle />
+            Confirmada
+          </span>
+        );
+
+      case "PENDIENTE":
+        return (
+          <span className="reservation-status pending">
+            <FaCircle />
+            Pendiente
+          </span>
+        );
+
+      case "CANCELADA":
+        return (
+          <span className="reservation-status cancelled">
+            <FaTimesCircle />
+            Cancelada
+          </span>
+        );
+
+      case "COMPLETADA":
+        return (
+          <span className="reservation-status completed">
+            <FaCheckCircle />
+            Completada
+          </span>
+        );
+
+      default:
+        return <span className="reservation-status">{estado}</span>;
     }
   };
 
@@ -46,29 +99,30 @@ export const RecentReservations: React.FC<RecentReservationsProps> = ({
 
       <div className="reservations-list">
         {citas.slice(0, 4).map((cita) => (
-          <div key={cita.idCita} className="reservation-item">
-            <div className="reservation-icon">
-              {getStatusIcon(cita.estadoCita)}
+          <div key={cita.idCita} className="reservation-card">
+            <div className="reservation-main">
+              <div className="communication-icon">
+                {getCommunicationIcon(cita.medioComunicacion)}
+              </div>
+
+              <div className="reservation-data">
+                <h4>{getClientName(cita.idCliente)}</h4>
+
+                <p>{cita.serviceName || "Servicio no asignado"}</p>
+              </div>
             </div>
 
-            <div className="reservation-info">
-              <p className="reservation-name">
-                {getClientName(cita.idCliente)}
-              </p>
-              <p className="reservation-service">{cita.serviceName}</p>
-            </div>
+            <div className="reservation-footer">
+              <div className="reservation-hour">
+                <FaClock />
 
-            <div className="reservation-time">
-              <span className="time">{cita.hora}</span>
+                {cita.hora}
+              </div>
+
+              {getStatus(cita.estadoCita)}
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="reservations-footer">
-        <a href="#" className="view-all">
-          Ver todas las citas →
-        </a>
       </div>
     </div>
   );
