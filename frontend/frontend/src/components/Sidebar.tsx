@@ -80,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             {menuItems
               .filter(item => {
                 if (item.path === '/dashboard' || item.path === '/usuarios') {
-                  return user?.rol === 'Administrador' || user?.idRol === 1;
+                  return user?.rol?.toLowerCase() === 'administrador';
                 }
                 return true;
               })

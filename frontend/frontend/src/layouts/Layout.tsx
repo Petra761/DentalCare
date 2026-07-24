@@ -44,7 +44,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   // Role check: Only Administrador can access Dashboard and Usuarios
-  const isAdmin = user?.rol === 'Administrador' || user?.idRol === 1;
+  const isAdmin = user?.rol?.toLowerCase() === 'administrador';
   const isAdminRoute = ['/dashboard', '/usuarios'].includes(location.pathname);
 
   if (isAdminRoute && !isAdmin) {
