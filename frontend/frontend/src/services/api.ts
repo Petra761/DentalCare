@@ -435,35 +435,7 @@ export const apiService = {
     }
   },
 
-  // --- APPOINTMENTS (CITAS) - CLIENT SIDE OR LOCAL STORAGE DRIVEN ---
-  async getCitas(): Promise<Cita[]> {
-    return getLocalCitas();
-  },
-
-  async createCita(cita: Omit<Cita, 'id'>): Promise<Cita> {
-    const citas = getLocalCitas();
-    const newId = citas.length > 0 ? (Math.max(...citas.map(c => parseInt(c.id))) + 1).toString() : '1';
-    const newCita = { ...cita, id: newId };
-    citas.push(newCita);
-    saveLocalCitas(citas);
-    return newCita;
-  },
-
-  async updateCita(id: string, updated: Partial<Cita>): Promise<Cita> {
-    const citas = getLocalCitas();
-    const idx = citas.findIndex(c => c.id === id);
-    if (idx === -1) throw new Error('Cita no encontrada');
-    citas[idx] = { ...citas[idx], ...updated };
-    saveLocalCitas(citas);
-    return citas[idx];
-  },
-
-  async deleteCita(id: string): Promise<void> {
-    const citas = getLocalCitas();
-    const filtered = citas.filter(c => c.id !== id);
-    saveLocalCitas(filtered);
-  },
-
+  
   // --- DATABASE-BOUND ENDPOINTS FOR PANTALLA GESTIÓN DE CITAS ---
   async getClientes(): Promise<Cliente[]> {
     if (isMockMode) {

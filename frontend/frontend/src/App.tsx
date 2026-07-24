@@ -6,7 +6,7 @@ import { Register } from "./pages/Register";
 import { GestionCitas } from "./pages/GestionCitas";
 import { PacientesListPage } from "./pages/FichaCliente/PacientesPagina";
 import { RegistrarPacienteForm } from "./components/FichaCliente/RegistrarPacienteFrom";
-import { Dashboard } from "./pages/Dashboard";
+import Dashboard  from "./pages/Dashboard/Dashboard";
 import { Tratamientos } from "./pages/Tratamientos";
 import { Reportes } from "./pages/Reportes";
 import { Usuarios } from "./pages/Usuarios";
