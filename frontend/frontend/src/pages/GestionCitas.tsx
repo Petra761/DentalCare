@@ -91,7 +91,7 @@ type Filter = 'Todas'|'Pendiente'|'Confirmada'|'Cancelada';
 type Tab = 'agenda' | 'historial';
 
 export const GestionCitas: React.FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => { if(!isAuthenticated) navigate('/'); }, [isAuthenticated, navigate]);
@@ -263,7 +263,7 @@ export const GestionCitas: React.FC = () => {
     await loadCitas(clients, services);
   };
 
-  const handleLogout = () => { logout(); navigate('/'); };
+
 
   // ── Agenda: Pendiente, Confirmada, Cancelada (citas activas/pendientes)
   // ── Historial: Completada (citas cerradas, solo consulta)
@@ -330,47 +330,9 @@ export const GestionCitas: React.FC = () => {
         lineHeight:1.5, WebkitFontSmoothing:'antialiased',
       }}>
 
-        {/* ── Minimal top bar ─────────────────────────────── */}
-        <div style={{
-          backgroundColor:C.bgCard, borderBottom:`1px solid ${C.border}`,
-          padding:'0 24px', height:52,
-          display:'flex', alignItems:'center', justifyContent:'space-between',
-          boxShadow:C.shadowSm, position:'sticky', top:0, zIndex:100,
-        }}>
-          <div style={{display:'flex', alignItems:'center', gap:10}}>
-            <div style={{
-              width:30, height:30, borderRadius:'50%',
-              background:`linear-gradient(135deg,${C.primary},${C.primaryDark})`,
-              display:'flex', alignItems:'center', justifyContent:'center',
-            }}>
-              <span style={{color:'#fff', fontSize:14}}>🦷</span>
-            </div>
-            <span style={{fontWeight:700, fontSize:16, color:C.primaryDark}}>DentalCare</span>
-            <span style={{color:C.border, margin:'0 8px', fontSize:16}}>|</span>
-            <span style={{fontSize:13, fontWeight:500, color:C.textMuted}}>Gestión de Citas</span>
-          </div>
-          <div style={{display:'flex', alignItems:'center', gap:12}}>
-            {user && (
-              <span style={{
-                fontSize:12, fontWeight:600, color:C.textMuted,
-                backgroundColor:'#F1F5F9', padding:'4px 10px', borderRadius:99,
-              }}>
-                {user.nombreUsuario} · {user.rol}
-              </span>
-            )}
-            <button onClick={handleLogout} style={{
-              fontSize:13, fontWeight:600, color:C.textMuted,
-              backgroundColor:'transparent', border:`1px solid ${C.border}`,
-              borderRadius:6, padding:'5px 12px', cursor:'pointer',
-            }}>
-              Cerrar Sesión
-            </button>
-          </div>
-        </div>
-
         {/* ── Main content ─────────────────────────────────── */}
         <div style={{
-          maxWidth:1200, margin:'40px auto', padding:'0 24px',
+          maxWidth:1200, margin:'0 auto', padding:'0 24px',
           animation:'fadeIn 0.4s ease-out',
         }}>
           {/* Header */}

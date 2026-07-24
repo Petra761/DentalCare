@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   getPacientes,
   getEstadisticasPacientes,
+  eliminarCliente,
 } from "../../services/FichaCliente/pacienteServices";
 import { PatientHeader } from "../../components/FichaCliente/HeaderPaciente";
 import { PatientSearch } from "../../components/FichaCliente/BuscarPaciente";
@@ -11,6 +12,7 @@ import {
 } from "../../components/FichaCliente/ListaCliente";
 import { RegistrarPacienteForm } from "../../components/FichaCliente/RegistrarPacienteFrom";
 import { VerHistorialPaciente } from "../../components/FichaCliente/VerHistorialPaciente";
+import { EditarPacienteModal } from "../../components/FichaCliente/EditarPacienteModal";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 interface ResponsePaginada {
@@ -41,6 +43,9 @@ export const PacientesListPage = () => {
   // Usamos el tipo Paciente de ListaCliente para evitar incompatibilidad de interfaces
   const [pacienteSeleccionado, setPacienteSeleccionado] =
     useState<Paciente | null>(null);
+
+  // ID del paciente que se está editando (null = modal cerrado)
+  const [editandoId, setEditandoId] = useState<number | null>(null);
 
   const fetchEstadisticas = async () => {
     try {
@@ -84,7 +89,7 @@ export const PacientesListPage = () => {
     setActiveTab("lista");
   };
 
-  // ✅ CORRECCIÓN 1: Recibe 'id' (number) y busca el objeto Paciente correspondiente
+  // Ver ficha: busca el paciente en la lista actual
   const handleVerFichaPorId = (id: number) => {
     const pacienteEncontrado = data.pacientes.find((p) => p.idCliente === id);
     if (pacienteEncontrado) {
@@ -93,6 +98,31 @@ export const PacientesListPage = () => {
     } else {
       console.warn("No se encontró el paciente con ID:", id);
     }
+  };
+
+  // Editar: abre el modal con los datos recargados del API
+  const handleEditarPaciente = (id: number) => {
+    setEditandoId(id);
+  };
+
+  // Callback al guardar exitosamente la edición
+  const handleSuccessEditar = () => {
+    setEditandoId(null);
+    fetchData();          // Recarga la lista sin recargar la página
+    fetchEstadisticas();
+  };
+
+  // Eliminar (soft-delete): actualiza la lista de forma optimista
+  const handleEliminarPaciente = async (id: number) => {
+    await eliminarCliente(id);
+    // Actualización optimista: cambiar estado a "Inactivo" en la lista local
+    setData((prev) => ({
+      ...prev,
+      pacientes: prev.pacientes.map((p) =>
+        p.idCliente === id ? { ...p, estado: "Inactivo" } : p,
+      ),
+    }));
+    fetchEstadisticas();
   };
 
   return (
@@ -135,6 +165,7 @@ export const PacientesListPage = () => {
           background-color: #FFFFFF;
           outline: none;
           transition: all 0.2s ease;
+          box-sizing: border-box;
         }
         .fc-input:focus {
           border-color: #009688;
@@ -281,6 +312,15 @@ export const PacientesListPage = () => {
         }
       `}</style>
 
+      {/* ── Modal de Edición (se superpone a todo) ── */}
+      {editandoId !== null && (
+        <EditarPacienteModal
+          idCliente={editandoId}
+          onCancelar={() => setEditandoId(null)}
+          onSuccess={handleSuccessEditar}
+        />
+      )}
+
       {/* VISTA 1: LISTA MAESTRA */}
       {activeTab === "lista" && (
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -308,13 +348,11 @@ export const PacientesListPage = () => {
 
           {!loading && !error && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {/* ✅ Se le pasa la función que recibe el number (id) */}
               <PatientTable
                 pacientes={data.pacientes}
                 onVerFicha={handleVerFichaPorId}
-                onNuevaCita={(id) =>
-                  console.log("Nueva Cita para paciente ID:", id)
-                }
+                onEditar={handleEditarPaciente}
+                onEliminar={handleEliminarPaciente}
               />
 
               {/* Paginación Responsiva */}

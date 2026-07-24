@@ -90,9 +90,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = user?.rol === 'Administrador' || user?.idRol === 1;
-  const isDentist = user?.rol === 'Dentista' || user?.idRol === 2;
-  const isPatient = user?.rol === 'Paciente' || user?.idRol === 3;
+  const isAdmin = user?.rol?.toLowerCase() === 'administrador';
+  const isDentist = user?.rol?.toLowerCase() === 'dentista';
+  const isPatient = user?.rol?.toLowerCase() === 'paciente';
 
   return (
     <AuthContext.Provider
