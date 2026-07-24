@@ -217,6 +217,18 @@ export const GestionCitas: React.FC = () => {
   const handleEdit = async (data:{client:Cliente;service:Servicio;fecha:string;hora:string;medio:string;estado:string}) => {
     if(!editCita) return;
 
+    if (data.estado === 'Completada') {
+      const datosCompletos = data.client.nombre && data.client.apellidoPaterno && data.client.telefono;
+      if (!datosCompletos) {
+        const ci = data.client.ci?.toString() ?? '';
+        await navigator.clipboard.writeText(ci).catch(() => {});
+        throw new Error(
+          `No puedes cambiar a Completada porque debes completar los datos del paciente.\n` +
+          `Se copió el CI (${ci}) al portapapeles para que lo busques en Pacientes.`
+        );
+      }
+    }
+
     if(apiService.isMock()) {
       const dbCitas = await apiService.getDbCitas();
       const dbDetalles = await apiService.getDetallesCita();
@@ -591,7 +603,7 @@ export const GestionCitas: React.FC = () => {
                             Vencida
                           </span>
                         )}
-                        {(cita as any).clientDataComplete === false && cita.estadoCita === 'Confirmada' && (
+                        {(cita as any).clientDataComplete === false && cita.estadoCita !== 'Completada' && cita.estadoCita !== 'Cancelada' && (
                           <span title="El cliente tiene datos incompletos. Complete nombre, apellido y teléfono." style={{
                             fontSize:10, fontWeight:700, color:'#E65100',
                             backgroundColor:'#FFF3E0', padding:'2px 6px',
