@@ -304,11 +304,6 @@ export const PatientTable: React.FC<PatientTableProps> = ({
                           <div style={{ fontWeight: 'bold', color: '#1A252C' }}>
                             {p.nombreCompleto}
                           </div>
-                          {p.telefono && (
-                            <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '2px' }} className="sm-hidden-text">
-                              {p.telefono}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </td>
