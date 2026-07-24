@@ -212,6 +212,24 @@ export const apiService = {
     }
   },
 
+  // GET ALL ROLES
+  async getRoles(): Promise<Rol[]> {
+    if (isMockMode) {
+      return MOCK_ROLES;
+    }
+
+    const res = await fetch(`${BASE_URL}/Roles`, {
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error('Error al obtener los roles');
+    const roles = await res.json();
+    return roles.map((r: any) => ({
+      id: r.idRol,
+      nombre: r.nombre,
+      estado: r.estado
+    }));
+  },
+
   // LOGIN
   async login(nombreUsuario: string, contrasena: string) {
     if (isMockMode) {
@@ -248,24 +266,40 @@ export const apiService = {
       throw new Error(errData.mensaje || 'Error de credenciales');
     }
 
-    return await res.json();
+    const data = await res.json();
+    return {
+      mensaje: data.mensaje,
+      token: data.token,
+      usuario: {
+        id: data.usuario.idUsuario,
+        codigo: data.usuario.codigo,
+        nombreUsuario: data.usuario.nombreUsuario,
+        idRol: data.usuario.idRol,
+        rol: data.usuario.rol,
+        estado: data.usuario.estado
+      }
+    };
   },
 
   // GET ALL USERS
   async getUsuarios(): Promise<Usuario[]> {
     if (isMockMode) {
-      return getLocalUsers();
+      return getLocalUsers().filter(u => u.estado?.toUpperCase() === 'ACTIVO');
     }
 
     const res = await fetch(`${BASE_URL}/Usuarios`, {
       headers: getHeaders()
     });
     if (!res.ok) throw new Error('Error al obtener los usuarios');
-    const users: Usuario[] = await res.json();
-    // Fetch and append Rol name manually since DB relations might be circular or ignored in JSON
+    const users: any[] = await res.json();
     return users.map(u => ({
-      ...u,
-      rol: u.idRol === 1 ? 'Administrador' : u.idRol === 2 ? 'Dentista' : 'Paciente'
+      id: u.idUsuario,
+      idRol: u.idRol,
+      codigo: u.codigo,
+      nombreUsuario: u.nombreUsuario,
+      contrasena: u.contrasena || '',
+      estado: u.estado,
+      rol: u.rolNombre || (u.idRol === 1 ? 'Administrador' : u.idRol === 2 ? 'Dentista' : 'Paciente')
     }));
   },
 
@@ -282,13 +316,26 @@ export const apiService = {
       headers: getHeaders()
     });
     if (!res.ok) throw new Error('Error al obtener el usuario');
-    return await res.json();
+    const u = await res.json();
+    return {
+      id: u.idUsuario,
+      idRol: u.idRol,
+      codigo: u.codigo,
+      nombreUsuario: u.nombreUsuario,
+      contrasena: u.contrasena || '',
+      estado: u.estado,
+      rol: u.rolNombre || (u.idRol === 1 ? 'Administrador' : u.idRol === 2 ? 'Dentista' : 'Paciente')
+    };
   },
 
   // CREATE USER (REGISTER/ADD)
   async createUsuario(usuario: Usuario): Promise<Usuario> {
     if (isMockMode) {
       const users = getLocalUsers();
+      const exists = users.some(u => u.nombreUsuario.toLowerCase() === usuario.nombreUsuario.toLowerCase() && u.estado?.toUpperCase() === 'ACTIVO');
+      if (exists) {
+        throw new Error('El nombre de usuario ya está registrado.');
+      }
       const newId = users.length > 0 ? Math.max(...users.map(u => u.id || 0)) + 1 : 1;
       const newUsuario = {
         ...usuario,
@@ -303,20 +350,40 @@ export const apiService = {
     const res = await fetch(`${BASE_URL}/Usuarios`, {
       method: 'POST',
       headers: getJsonHeaders(),
-      body: JSON.stringify(usuario)
+      body: JSON.stringify({
+        idUsuario: usuario.id || 0,
+        idRol: usuario.idRol,
+        codigo: usuario.codigo,
+        nombreUsuario: usuario.nombreUsuario,
+        contrasena: usuario.contrasena,
+        estado: usuario.estado
+      })
     });
 
     if (!res.ok) {
       const errText = await res.text();
       throw new Error(errText || 'Error al crear el usuario');
     }
-    return await res.json();
+    const u = await res.json();
+    return {
+      id: u.idUsuario,
+      idRol: u.idRol,
+      codigo: u.codigo,
+      nombreUsuario: u.nombreUsuario,
+      contrasena: u.contrasena || '',
+      estado: u.estado,
+      rol: u.rolNombre || (u.idRol === 1 ? 'Administrador' : u.idRol === 2 ? 'Dentista' : 'Paciente')
+    };
   },
 
   // UPDATE USER
   async updateUsuario(id: number, usuario: Usuario): Promise<void> {
     if (isMockMode) {
       const users = getLocalUsers();
+      const exists = users.some(u => u.nombreUsuario.toLowerCase() === usuario.nombreUsuario.toLowerCase() && u.id !== id && u.estado?.toUpperCase() === 'ACTIVO');
+      if (exists) {
+        throw new Error('El nombre de usuario ya está registrado.');
+      }
       const idx = users.findIndex(u => u.id === id);
       if (idx === -1) throw new Error('Usuario no encontrado');
       users[idx] = {
@@ -331,11 +398,19 @@ export const apiService = {
     const res = await fetch(`${BASE_URL}/Usuarios/${id}`, {
       method: 'PUT',
       headers: getJsonHeaders(),
-      body: JSON.stringify(usuario)
+      body: JSON.stringify({
+        idUsuario: id,
+        idRol: usuario.idRol,
+        codigo: usuario.codigo,
+        nombreUsuario: usuario.nombreUsuario,
+        contrasena: usuario.contrasena,
+        estado: usuario.estado
+      })
     });
 
     if (!res.ok) {
-      throw new Error('Error al actualizar el usuario');
+      const errText = await res.text();
+      throw new Error(errText || 'Error al actualizar el usuario');
     }
   },
 
@@ -343,9 +418,10 @@ export const apiService = {
   async deleteUsuario(id: number): Promise<void> {
     if (isMockMode) {
       const users = getLocalUsers();
-      const filtered = users.filter(u => u.id !== id);
-      if (users.length === filtered.length) throw new Error('Usuario no encontrado');
-      saveLocalUsers(filtered);
+      const idx = users.findIndex(u => u.id === id);
+      if (idx === -1) throw new Error('Usuario no encontrado');
+      users[idx].estado = 'INACTIVO';
+      saveLocalUsers(users);
       return;
     }
 
@@ -359,35 +435,7 @@ export const apiService = {
     }
   },
 
-  // --- APPOINTMENTS (CITAS) - CLIENT SIDE OR LOCAL STORAGE DRIVEN ---
-  async getCitas(): Promise<Cita[]> {
-    return getLocalCitas();
-  },
-
-  async createCita(cita: Omit<Cita, 'id'>): Promise<Cita> {
-    const citas = getLocalCitas();
-    const newId = citas.length > 0 ? (Math.max(...citas.map(c => parseInt(c.id))) + 1).toString() : '1';
-    const newCita = { ...cita, id: newId };
-    citas.push(newCita);
-    saveLocalCitas(citas);
-    return newCita;
-  },
-
-  async updateCita(id: string, updated: Partial<Cita>): Promise<Cita> {
-    const citas = getLocalCitas();
-    const idx = citas.findIndex(c => c.id === id);
-    if (idx === -1) throw new Error('Cita no encontrada');
-    citas[idx] = { ...citas[idx], ...updated };
-    saveLocalCitas(citas);
-    return citas[idx];
-  },
-
-  async deleteCita(id: string): Promise<void> {
-    const citas = getLocalCitas();
-    const filtered = citas.filter(c => c.id !== id);
-    saveLocalCitas(filtered);
-  },
-
+  
   // --- DATABASE-BOUND ENDPOINTS FOR PANTALLA GESTIÓN DE CITAS ---
   async getClientes(): Promise<Cliente[]> {
     if (isMockMode) {

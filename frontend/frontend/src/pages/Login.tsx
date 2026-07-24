@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Stethoscope, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
@@ -19,6 +19,14 @@ export const Login: React.FC = () => {
 
     try {
       await login(nombreUsuario, contrasena);
+      const stored = localStorage.getItem('dental_session');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.rol === 'Administrador' || parsed.idRol === 1) {
+          navigate('/dashboard');
+          return;
+        }
+      }
       navigate('/gestion-citas');
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.');
@@ -105,12 +113,7 @@ export const Login: React.FC = () => {
           </button>
         </form>
 
-        <div style={styles.footer}>
-          <span>¿No tienes una cuenta de paciente?</span>
-          <Link to="/register" style={styles.registerLink}>
-            Regístrate aquí
-          </Link>
-        </div>
+        {/* Registro deshabilitado desde login */}
       </div>
     </div>
   );

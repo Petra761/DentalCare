@@ -12,6 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DentalCare.Controllers
@@ -33,34 +34,76 @@ namespace DentalCare.Controllers
 
         // GET: api/Usuarios
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuario()
+        public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetUsuario()
         {
-            return await _context.Usuario.ToListAsync();
+            var usuarios = await _context.Usuario
+                .Include(u => u.Rol)
+                .Where(u => u.Estado == "Activo")
+                .Select(u => new UsuarioDto
+                {
+                    IdUsuario = u.IdUsuario,
+                    IdRol = u.IdRol,
+                    Codigo = u.Codigo,
+                    NombreUsuario = u.NombreUsuario,
+                    Contrasenia = u.Contrasenia,
+                    Estado = u.Estado,
+                    RolNombre = u.Rol != null ? u.Rol.Nombre : null
+                })
+                .ToListAsync();
+
+            return Ok(usuarios);
         }
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Usuario>> GetUsuario(int id)
+        public async Task<ActionResult<UsuarioDto>> GetUsuario(int id)
         {
-            var usuario = await _context.Usuario.FindAsync(id);
+            var usuario = await _context.Usuario
+                .Include(u => u.Rol)
+                .FirstOrDefaultAsync(u => u.IdUsuario == id);
 
             if (usuario == null)
             {
                 return NotFound();
             }
 
-            return usuario;
+            return Ok(new UsuarioDto
+            {
+                IdUsuario = usuario.IdUsuario,
+                IdRol = usuario.IdRol,
+                Codigo = usuario.Codigo,
+                NombreUsuario = usuario.NombreUsuario,
+                Contrasenia = usuario.Contrasenia,
+                Estado = usuario.Estado,
+                RolNombre = usuario.Rol?.Nombre
+            });
         }
 
         // PUT: api/Usuarios/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUsuario(int id, Usuario usuario)
+        public async Task<IActionResult> PutUsuario(int id, UsuarioDto dto)
         {
-            if (id != usuario.IdUsuario)
+            var usuario = await _context.Usuario.FindAsync(id);
+            if (usuario == null)
             {
-                return BadRequest();
+                return NotFound();
             }
+
+            if (await _context.Usuario.AnyAsync(u => u.NombreUsuario.ToLower() == dto.NombreUsuario.ToLower() && u.IdUsuario != id))
+            {
+                return BadRequest("El nombre de usuario ya está registrado por otro usuario.");
+            }
+
+            usuario.IdRol = dto.IdRol;
+            usuario.Codigo = dto.Codigo;
+            usuario.NombreUsuario = dto.NombreUsuario;
+            usuario.Estado = dto.Estado;
+
+            if (string.IsNullOrEmpty(dto.Contrasenia) || dto.Contrasenia.Length < 8)
+            {
+                return BadRequest("La contraseña es requerida y debe tener al menos 8 caracteres.");
+            }
+            usuario.Contrasenia = dto.Contrasenia;
 
             _context.Entry(usuario).State = EntityState.Modified;
 
@@ -84,18 +127,47 @@ namespace DentalCare.Controllers
         }
 
         // POST: api/Usuarios
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
+        public async Task<ActionResult<UsuarioDto>> PostUsuario(UsuarioDto dto)
         {
+            if (await _context.Usuario.AnyAsync(u => u.NombreUsuario.ToLower() == dto.NombreUsuario.ToLower()))
+            {
+                return BadRequest("El nombre de usuario ya está registrado.");
+            }
+
+            if (string.IsNullOrEmpty(dto.Contrasenia) || dto.Contrasenia.Length < 8)
+            {
+                return BadRequest("La contraseña debe tener al menos 8 caracteres.");
+            }
+
+            var usuario = new Usuario
+            {
+                IdRol = dto.IdRol,
+                Codigo = dto.Codigo,
+                NombreUsuario = dto.NombreUsuario,
+                Contrasenia = dto.Contrasenia,
+                Estado = "Activo"
+            };
+
             _context.Usuario.Add(usuario);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUsuario", new { id = usuario.IdUsuario }, usuario);
+            await _context.Entry(usuario).Reference(u => u.Rol).LoadAsync();
+
+            return CreatedAtAction("GetUsuario", new { id = usuario.IdUsuario }, new UsuarioDto
+            {
+                IdUsuario = usuario.IdUsuario,
+                IdRol = usuario.IdRol,
+                Codigo = usuario.Codigo,
+                NombreUsuario = usuario.NombreUsuario,
+                Contrasenia = usuario.Contrasenia,
+                Estado = usuario.Estado,
+                RolNombre = usuario.Rol?.Nombre
+            });
         }
 
-        // DELETE: api/Usuarios/5
+        // DELETE: api/Usuarios/5 (Logical delete)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
@@ -105,7 +177,7 @@ namespace DentalCare.Controllers
                 return NotFound();
             }
 
-            _context.Usuario.Remove(usuario);
+            usuario.Estado = "Inactivo";
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -185,4 +257,16 @@ public class LoginRequest
 {
     public string NombreUsuario { get; set; } = string.Empty;
     public string Contrasena { get; set; } = string.Empty;
+}
+
+public class UsuarioDto
+{
+    public int IdUsuario { get; set; }
+    public int IdRol { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string NombreUsuario { get; set; } = string.Empty;
+    [JsonPropertyName("contrasena")]
+    public string Contrasenia { get; set; } = string.Empty;
+    public string Estado { get; set; } = "Activo";
+    public string? RolNombre { get; set; }
 }

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import {
   getHistorialCliente,
   getClientePorId,
+  obtenerAlergias,
   type HistorialCita,
   type Paciente,
+  type Alergia,
 } from "../../services/FichaCliente/pacienteServices";
 import {
   ArrowLeft,
@@ -30,6 +32,7 @@ export const VerHistorialPaciente: React.FC<Props> = ({
 }) => {
   const [infoPaciente, setInfoPaciente] = useState<Paciente>(paciente);
   const [historial, setHistorial] = useState<HistorialCita[]>([]);
+  const [alergiasCatalogo, setAlergiasCatalogo] = useState<Alergia[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorHistorial, setErrorHistorial] = useState<string | null>(null);
 
@@ -40,10 +43,12 @@ export const VerHistorialPaciente: React.FC<Props> = ({
       Promise.all([
         getClientePorId(paciente.idCliente),
         getHistorialCliente(paciente.idCliente),
+        obtenerAlergias(),
       ])
-        .then(([datosDetallados, datosHistorial]) => {
+        .then(([datosDetallados, datosHistorial, catalogoAlergias]) => {
           setInfoPaciente(datosDetallados);
           setHistorial(datosHistorial);
+          setAlergiasCatalogo(catalogoAlergias);
         })
         .catch((err) =>
           setErrorHistorial(err.message || "Error al cargar datos del paciente"),
@@ -309,7 +314,7 @@ export const VerHistorialPaciente: React.FC<Props> = ({
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
                 <div className="vhp-pulse-dot" />
                 <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
-                  {infoPaciente.estado || "Activo"} · ID {infoPaciente.ci}
+                  {infoPaciente.estado || "Activo"} · CI {infoPaciente.ci}
                 </span>
               </div>
             </div>
@@ -353,7 +358,7 @@ export const VerHistorialPaciente: React.FC<Props> = ({
 
           {/* Tipo de sangre */}
           <div className="vhp-info-item" style={{ animationDelay: "0.15s" }}>
-            <div className="vhp-info-icon" style={{ background: "#FEE2E2", color: "#B91C1C" }}>
+            <div className="vhp-info-icon" style={{ background: "#E0F2F1", color: "#009688" }}>
               <Droplet size={20} />
             </div>
             <div>
@@ -366,7 +371,7 @@ export const VerHistorialPaciente: React.FC<Props> = ({
 
           {/* Fecha de nacimiento */}
           <div className="vhp-info-item" style={{ animationDelay: "0.2s" }}>
-            <div className="vhp-info-icon" style={{ background: "#E0F2FE", color: "#0369A1" }}>
+            <div className="vhp-info-icon" style={{ background: "#E0F2F1", color: "#009688" }}>
               <Calendar size={20} />
             </div>
             <div>
@@ -379,7 +384,7 @@ export const VerHistorialPaciente: React.FC<Props> = ({
 
           {/* Estado ficha */}
           <div className="vhp-info-item" style={{ animationDelay: "0.25s" }}>
-            <div className="vhp-info-icon" style={{ background: "#DCFCE7", color: "#15803D" }}>
+            <div className="vhp-info-icon" style={{ background: "#E0F2F1", color: "#009688" }}>
               <Activity size={20} />
             </div>
             <div>
@@ -405,6 +410,131 @@ export const VerHistorialPaciente: React.FC<Props> = ({
             </div>
           </div>
         </div>
+
+        {/* Banner de Alergias */}
+        {alergiasCatalogo.filter((a) =>
+          (infoPaciente as any).alergiaClientes?.some((pa: any) => pa.idAlergia === a.idAlergia)
+        ).length > 0 ? (
+          <div
+            className="vhp-card"
+            style={{
+              margin: "0 12px 24px",
+              padding: "16px 20px",
+              backgroundColor: "#FFFFFF",
+              border: "1px solid #E2E8F0",
+              borderRadius: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              animationDelay: "0.3s"
+            }}
+          >
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                backgroundColor: "#E0F2F1",
+                color: "#009688",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                border: "1px solid #B2DFDB"
+              }}
+            >
+              <AlertCircle size={22} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#94A3B8",
+                  marginBottom: "6px"
+                }}
+              >
+                Atención - Alergias del Paciente
+              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {alergiasCatalogo
+                  .filter((a) =>
+                    (infoPaciente as any).alergiaClientes?.some((pa: any) => pa.idAlergia === a.idAlergia)
+                  )
+                  .map((a) => (
+                    <span
+                      key={a.idAlergia}
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        backgroundColor: "#E0F2F1",
+                        color: "#00796B",
+                        padding: "4px 12px",
+                        borderRadius: "8px",
+                        border: "1px solid #B2DFDB",
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
+                      }}
+                    >
+                      {a.nombre}
+                    </span>
+                  ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="vhp-card"
+            style={{
+              margin: "0 12px 24px",
+              padding: "14px 20px",
+              backgroundColor: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              borderRadius: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+              animationDelay: "0.3s"
+            }}
+          >
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "10px",
+                backgroundColor: "#E2E8F0",
+                color: "#64748B",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0
+              }}
+            >
+              <AlertCircle size={18} />
+            </div>
+            <div>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#64748B",
+                  marginBottom: "2px"
+                }}
+              >
+                Alergias
+              </span>
+              <span style={{ fontSize: "13px", color: "#64748B", fontStyle: "italic" }}>
+                Sin alergias registradas o conocidas para este paciente.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* ═══════════════════════════════════════════════
             SECCIÓN HISTORIAL
@@ -436,7 +566,7 @@ export const VerHistorialPaciente: React.FC<Props> = ({
               <span style={{ background: "#E0F2F1", borderRadius: "10px", padding: "6px 8px", display: "flex", alignItems: "center" }}>
                 <ClipboardList size={18} color="#009688" />
               </span>
-              Historial de Citas y Tratamientos
+              Historial de Citas y Servicios
             </h3>
             {!loading && (
               <span

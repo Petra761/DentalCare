@@ -50,27 +50,6 @@ export const PatientSearch: React.FC<PatientSearchProps> = ({ busqueda, onSearch
           }}
         />
       </div>
-
-      {/* Botones de Filtro y Ordenamiento */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button
-          type="button"
-          className="fc-btn-ghost"
-          style={{ padding: '12px 16px' }}
-        >
-          <SlidersHorizontal size={16} />
-          Filtros
-        </button>
-        <button
-          type="button"
-          className="fc-btn-ghost"
-          style={{ padding: '12px 12px' }}
-          title="Ordenar"
-        >
-          <ArrowUpDown size={16} />
-        </button>
-      </div>
     </div>
   );
 };
-
