@@ -80,7 +80,7 @@ const isOverdue = (fecha:string, hora:string, estadoCita:string): boolean => {
   return apptDate < new Date();
 };
 
-type Filter = 'Todas'|'Pendiente'|'Confirmada'|'Cancelada'|'Completada'|'Reagendado';
+type Filter = 'Todas'|'Pendiente'|'Confirmada'|'Cancelada'|'Completada';
 type DateFilter = 'Todas' | 'Hoy' | 'Semana' | 'Mes';
 type Tab = 'agenda' | 'historial';
 
@@ -299,7 +299,7 @@ export const GestionCitas: React.FC = () => {
     c.estadoCita === 'Pendiente' || c.estadoCita === 'Confirmada'
   );
   const historialCitas = appointments.filter(c =>
-    c.estadoCita === 'Completada' || c.estadoCita === 'Cancelada' || c.estadoCita === 'Reagendado'
+    c.estadoCita === 'Completada' || c.estadoCita === 'Cancelada'
   );
 
   const currentPool = tab === 'agenda' ? agendaCitas : historialCitas;

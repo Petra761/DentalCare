@@ -39,14 +39,13 @@ namespace DentalCare.Controllers
         }
 
         // ─── GET: api/Citas/historial ─────────────────────────────────────────
-        [HttpGet("historial")]
+[HttpGet("historial")]
         public async Task<ActionResult<IEnumerable<Cita>>> GetHistorial()
         {
             return await _context.Cita
                 .Where(c => c.Estado == "Activo"
                     && (c.EstadoCita == "Cancelada"
-                        || c.EstadoCita == "Completada"
-                        || c.EstadoCita == "Reagendado"))
+                        || c.EstadoCita == "Completada"))
                 .OrderByDescending(c => c.Fecha)
                 .ThenByDescending(c => c.Hora)
                 .ToListAsync();
