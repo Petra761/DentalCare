@@ -131,6 +131,9 @@ export const GestionCitas: React.FC = () => {
     const autoCompleted: number[] = [];
     for (const c of raw) {
       if (c.estadoCita === 'Confirmada' && isOverdue(c.fecha, c.hora, c.estadoCita)) {
+        const client = cli.find(x => x.idCliente === c.idCliente);
+        const datosCompletos = client && client.nombre && client.apellidoPaterno && client.telefono;
+        if (!datosCompletos) continue;
         try {
           await fetch(`http://localhost:5020/api/Citas/${c.idCita}/estado`, {
             method: 'PATCH',
@@ -149,10 +152,12 @@ export const GestionCitas: React.FC = () => {
       ]);
       const rawMapped2 = (c: DbCita) => {
         const client  = cli.find(x => x.idCliente === c.idCliente);
+        const datosCompletos = client && client.nombre && client.apellidoPaterno && client.telefono;
         const detail  = detalles.find(d => d.idCita === c.idCita);
         const service = detail ? srv.find(s => s.idServicio === detail.idServicio) : null;
         return {
           ...c,
+          clientDataComplete: !!datosCompletos,
           clientName:    client ? `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno}`.trim() : 'Desconocido',
           clientCi:      client ? client.ci.toString() : 'N/A',
           clientFirstChar: client ? `${client.nombre[0]}${client.apellidoPaterno[0]}` : 'NA',
@@ -160,7 +165,7 @@ export const GestionCitas: React.FC = () => {
           _clientObj:    client  ?? null,
           _serviceObj:   service ?? null,
           _hora:         c.hora,
-        } as DbCita & { _clientObj:Cliente|null; _serviceObj:Servicio|null; _hora:string };
+} as DbCita & { _clientObj:Cliente|null; _serviceObj:Servicio|null; _hora:string; clientDataComplete:boolean };
       };
       const mapped2 = [...raw2, ...historial2].map(rawMapped2);
       mapped2.sort((a,b) => new Date(`${b.fecha}T${b.hora}`).getTime() - new Date(`${a.fecha}T${a.hora}`).getTime());
@@ -170,10 +175,12 @@ export const GestionCitas: React.FC = () => {
 
     const rawMapped = (c: DbCita) => {
       const client  = cli.find(x => x.idCliente === c.idCliente);
+      const datosCompletos = client && client.nombre && client.apellidoPaterno && client.telefono;
       const detail  = detalles.find(d => d.idCita === c.idCita);
       const service = detail ? srv.find(s => s.idServicio === detail.idServicio) : null;
       return {
         ...c,
+        clientDataComplete: !!datosCompletos,
         clientName:    client ? `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno}`.trim() : 'Desconocido',
         clientCi:      client ? client.ci.toString() : 'N/A',
         clientFirstChar: client ? `${client.nombre[0]}${client.apellidoPaterno[0]}` : 'NA',
@@ -181,7 +188,7 @@ export const GestionCitas: React.FC = () => {
         _clientObj:    client  ?? null,
         _serviceObj:   service ?? null,
         _hora:         c.hora,
-      } as DbCita & { _clientObj:Cliente|null; _serviceObj:Servicio|null; _hora:string };
+      } as DbCita & { _clientObj:Cliente|null; _serviceObj:Servicio|null; _hora:string; clientDataComplete:boolean };
     };
     const mapped = [...raw, ...historialRaw].map(rawMapped);
     mapped.sort((a,b) => new Date(`${b.fecha}T${b.hora}`).getTime() - new Date(`${a.fecha}T${a.hora}`).getTime());
@@ -582,6 +589,15 @@ export const GestionCitas: React.FC = () => {
                             borderRadius:99, letterSpacing:'0.03em',
                           }}>
                             Vencida
+                          </span>
+                        )}
+                        {(cita as any).clientDataComplete === false && cita.estadoCita === 'Confirmada' && (
+                          <span title="El cliente tiene datos incompletos. Complete nombre, apellido y teléfono." style={{
+                            fontSize:10, fontWeight:700, color:'#E65100',
+                            backgroundColor:'#FFF3E0', padding:'2px 6px',
+                            borderRadius:99, letterSpacing:'0.03em',
+                          }}>
+                            Datos incompletos
                           </span>
                         )}
                       </div>
