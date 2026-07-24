@@ -450,9 +450,23 @@ export const apiService = {
       localStorage.setItem('dental_db_clientes', JSON.stringify(defaultMock));
       return defaultMock;
     }
-    const res = await fetch(`${BASE_URL}/Clientes`, { headers: getHeaders() });
+    const res = await fetch(`${BASE_URL}/Clientes?limite=1000`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Error al obtener clientes');
-    return await res.json();
+    const data = await res.json();
+    return (data.pacientes || []).map((p: any) => {
+      const partes = (p.nombreCompleto || '').split(' ');
+      return {
+        idCliente: p.idCliente,
+        ci: p.ci,
+        nombre: partes[0] || '',
+        apellidoPaterno: partes[1] || '',
+        apellidoMaterno: partes.slice(2).join(' ') || '',
+        tipoSangre: '',
+        telefono: p.telefono || '',
+        fechaNacimiento: '',
+        estado: p.estado || 'Activo',
+      };
+    });
   },
 
   async getCategorias(): Promise<Categoria[]> {
@@ -500,6 +514,13 @@ export const apiService = {
     }
     const res = await fetch(`${BASE_URL}/Citas`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Error al obtener citas');
+    return await res.json();
+  },
+
+  async getHistorial(): Promise<DbCita[]> {
+    if (isMockMode) return [];
+    const res = await fetch(`${BASE_URL}/Citas/historial`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error al obtener historial');
     return await res.json();
   },
 

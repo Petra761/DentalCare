@@ -61,6 +61,8 @@ $RECYCLE.BIN/
 .env.*.local
 appsettings.Development.json
 appsettings.Local.json
+appsettings.json
+google-credentials.json
 
 ### Supabase (si aplica) ###
 .supabase/

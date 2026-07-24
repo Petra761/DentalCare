@@ -40,7 +40,8 @@ namespace DentalCare.Controllers
             return await _context.Cita
                 .Where(c => c.Estado == "Activo"
                     && (c.EstadoCita == "Cancelada"
-                        || c.EstadoCita == "Completada"))
+                        || c.EstadoCita == "Completada"
+                        || c.EstadoCita == "Reagendado"))
                 .OrderByDescending(c => c.Fecha)
                 .ThenByDescending(c => c.Hora)
                 .ToListAsync();
