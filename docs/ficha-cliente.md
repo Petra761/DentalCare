@@ -63,23 +63,23 @@ Este módulo permite la administración completa de clientes del sistema **Denta
 
 ## 📌 Subtareas
 
-| Estado | Código | Descripción |
-|---------|--------|-------------|
-| ✅ | BCJ-75 | Crear Cliente registrando datos personales |
-| ✅ | BCJ-76 | Modificar Cliente precargando los datos |
-| ✅ | BCJ-77 | Eliminar Cliente mediante modal de confirmación |
-| ✅ | BCJ-78 | Buscar Cliente por CI, Nombre o Teléfono |
-| ✅ | BCJ-79 | Listar Clientes con iconos de acceso rápido |
-| ✅ | BCJ-80 | Mostrar cambio de estado Activo/Inactivo |
-| ✅ | BCJ-140 | Ver ficha del cliente con sus alergias |
+| Estado | Código  | Descripción                                     |
+| ------ | ------- | ----------------------------------------------- |
+| ✅     | BCJ-75  | Crear Cliente registrando datos personales      |
+| ✅     | BCJ-76  | Modificar Cliente precargando los datos         |
+| ✅     | BCJ-77  | Eliminar Cliente mediante modal de confirmación |
+| ✅     | BCJ-78  | Buscar Cliente por CI, Nombre o Teléfono        |
+| ✅     | BCJ-79  | Listar Clientes con iconos de acceso rápido     |
+| ✅     | BCJ-80  | Mostrar cambio de estado Activo/Inactivo        |
+| ✅     | BCJ-140 | Ver ficha del cliente con sus alergias          |
 
 ---
 
 ## ⏱️ Estimación
 
-| Story Points | Tiempo |
-|--------------|---------|
-| **8** | **2 días** |
+| Story Points | Tiempo     |
+| ------------ | ---------- |
+| **8**        | **2 días** |
 
 ---
 
@@ -114,21 +114,21 @@ Este módulo permite la administración completa de clientes del sistema **Denta
 
 ## 📌 Subtareas
 
-| Estado | Descripción |
-|---------|-------------|
-| ✅ | Crear HeaderPaciente.tsx |
-| ✅ | Implementar visualización de alergias |
-| ✅ | Crear estado vacío para clientes sin alergias |
-| ✅ | Navegación entre ficha y listado |
-| ✅ | Diseño responsive |
+| Estado | Descripción                                   |
+| ------ | --------------------------------------------- |
+| ✅     | Crear HeaderPaciente.tsx                      |
+| ✅     | Implementar visualización de alergias         |
+| ✅     | Crear estado vacío para clientes sin alergias |
+| ✅     | Navegación entre ficha y listado              |
+| ✅     | Diseño responsive                             |
 
 ---
 
 ## ⏱️ Estimación
 
-| Story Points | Tiempo |
-|--------------|---------|
-| **3** | **6 horas** |
+| Story Points | Tiempo      |
+| ------------ | ----------- |
+| **3**        | **6 horas** |
 
 ---
 
@@ -142,19 +142,19 @@ Crear la base de datos del proyecto DentalCare y configurar la conexión entre l
 
 ## ⏱️ Estimación
 
-| Tiempo |
-|---------|
+| Tiempo      |
+| ----------- |
 | **5 horas** |
 
 ---
 
 # 📊 Resumen de Estimación
 
-| Actividad | Tiempo |
-|-----------|---------|
-| HU-DEN-129 - Gestionar Clientes | 2 días |
+| Actividad                                 | Tiempo  |
+| ----------------------------------------- | ------- |
+| HU-DEN-129 - Gestionar Clientes           | 2 días  |
 | HU-DEN-130 - Ficha del Cliente y Alergias | 6 horas |
-| DCJ-47 - Crear Base de Datos y Conexión | 5 horas |
+| DCJ-47 - Crear Base de Datos y Conexión   | 5 horas |
 
 ---
 
@@ -267,14 +267,14 @@ Alergia
 
 # 🌐 Endpoints REST
 
-| Método | Endpoint | Descripción |
-|---------|----------|-------------|
-| GET | `/api/clientes` | Obtener todos los clientes |
-| GET | `/api/clientes/{id}` | Obtener cliente con alergias |
-| GET | `/api/clientes/buscar?query=` | Buscar cliente |
-| POST | `/api/clientes` | Registrar cliente |
-| PUT | `/api/clientes/{id}` | Actualizar cliente |
-| DELETE | `/api/clientes/{id}` | Eliminar cliente |
+| Método | Endpoint                      | Descripción                  |
+| ------ | ----------------------------- | ---------------------------- |
+| GET    | `/api/clientes`               | Obtener todos los clientes   |
+| GET    | `/api/clientes/{id}`          | Obtener cliente con alergias |
+| GET    | `/api/clientes/buscar?query=` | Buscar cliente               |
+| POST   | `/api/clientes`               | Registrar cliente            |
+| PUT    | `/api/clientes/{id}`          | Actualizar cliente           |
+| DELETE | `/api/clientes/{id}`          | Eliminar cliente             |
 
 ---
 
