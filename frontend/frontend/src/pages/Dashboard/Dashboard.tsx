@@ -5,6 +5,8 @@ import { apiService } from "../../services/api";
 import type { DbCita, Cliente, Servicio } from "../../services/api";
 import { RecentReservations } from "../../components/dashboard/RecentReservations";
 import { GrowthChart } from "../../components/dashboard/GrowthChart";
+import { AssistantMetrics } from "../../components/dashboard/AssistantMetrics";
+
 import "./Dashboard.css";
 
 export const Dashboard: React.FC = () => {
@@ -70,6 +72,28 @@ export const Dashboard: React.FC = () => {
     citas.length === 0
       ? 0
       : Math.round((canceladas.length / citas.length) * 100);
+
+  // ==========================
+  // MÉTRICAS ASISTENTE VIRTUAL
+  // ==========================
+
+  const citasWhatsApp = citas.filter(
+    (c) => c.medioComunicacion?.toLowerCase() === "whatsapp",
+  );
+
+  // Citas creadas por el bot
+  const agendadasBot = citasWhatsApp.filter(
+    (c) => c.estadoCita.toUpperCase() !== "Cancelada",
+  ).length;
+
+  // Actualmente no existe historial de cambios,
+  // por eso queda preparado para futuras mejoras
+  const reagendadasBot = 0;
+
+  // Cancelaciones realizadas por WhatsApp
+  const canceladasBot = citasWhatsApp.filter(
+    (c) => c.estadoCita.toUpperCase() === "Cancelada",
+  ).length;
   return (
     <div className="dashboard">
       <section className="cards-grid">
@@ -129,6 +153,13 @@ export const Dashboard: React.FC = () => {
         <div>
           <RecentReservations citas={citas} clientes={clientes} />
         </div>
+      </section>
+      <section className="assistant-container">
+        <AssistantMetrics
+          agendadasBot={agendadasBot}
+          reagendadasBot={reagendadasBot}
+          canceladasBot={canceladasBot}
+        />
       </section>
     </div>
   );

@@ -41,7 +41,7 @@
 
   border-radius: 18px;
 
-  padding: 28px;
+  padding: 22px;
 
   box-shadow: var(--shadowMd);
 
@@ -73,9 +73,9 @@
 }
 
 .card-icon {
-  width: 56px;
+  width: 48px;
 
-  height: 56px;
+  height: 48px;
 
   border-radius: 14px;
 
@@ -107,7 +107,7 @@
 }
 
 .card h2 {
-  font-size: 42px;
+  font-size: 34 px;
 
   color: var(--textMain);
 
@@ -143,7 +143,7 @@
 .dashboard-bottom {
   display: grid;
 
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1.2fr 1fr;
 
   gap: 24px;
 
@@ -160,6 +160,7 @@
   border-radius: 16px;
 
   min-height: 350px;
+  height: 100%;
 }
 
 /* reservas */
@@ -413,7 +414,7 @@
 }
 
 .chart-area {
-  height: 280px;
+  height: 360px;
 
   display: flex;
 
@@ -439,4 +440,174 @@
   font-size: 13px;
 
   font-weight: 600;
+}
+
+/* ===============================
+   ASISTENTE VIRTUAL - MÉTRICAS IA
+================================ */
+
+.assistant-container {
+  margin-top: 25px;
+}
+
+/* tarjeta principal */
+
+.assistant-card {
+  background: var(--bgCard);
+
+  border: 1px solid var(--border);
+
+  border-radius: 18px;
+
+  padding: 24px;
+
+  box-shadow: var(--shadowMd);
+
+  transition: 0.25s;
+}
+
+.assistant-card:hover {
+  box-shadow: var(--shadowLg);
+}
+
+/* titulo */
+
+.assistant-title {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 22px;
+
+  color: var(--primary);
+}
+
+.assistant-title h2 {
+  margin: 0;
+
+  font-size: 20px;
+
+  font-weight: 700;
+
+  color: var(--textMain);
+}
+
+/* GRID DE METRICAS */
+
+.assistant-metrics-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 20px;
+}
+
+/* tarjeta individual */
+
+.assistant-metric {
+  display: flex;
+
+  align-items: center;
+
+  gap: 16px;
+
+  background: var(--bgHover);
+
+  border: 1px solid var(--border);
+
+  border-radius: 16px;
+
+  padding: 20px;
+
+  transition: 0.25s;
+}
+
+.assistant-metric:hover {
+  transform: translateY(-3px);
+
+  box-shadow: var(--shadowMd);
+}
+
+/* iconos */
+
+.metric-icon {
+  width: 48px;
+
+  height: 48px;
+
+  border-radius: 14px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: var(--primaryLight);
+
+  color: var(--primary);
+}
+
+/* texto */
+
+.assistant-metric span {
+  display: block;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.8px;
+
+  color: var(--textMuted);
+
+  margin-bottom: 5px;
+}
+
+.assistant-metric h3 {
+  margin: 0;
+
+  font-size: 32px;
+
+  font-weight: 700;
+
+  color: var(--textMain);
+}
+
+.assistant-metric p {
+  margin: 5px 0 0;
+
+  font-size: 13px;
+
+  color: var(--textLight);
+}
+
+/* variantes de color */
+
+.assistant-metric.green .metric-icon {
+  background: var(--primaryLight);
+
+  color: var(--primary);
+}
+
+.assistant-metric.teal .metric-icon {
+  background: #ccfbf1;
+
+  color: var(--primaryDark);
+}
+
+.assistant-metric.red .metric-icon {
+  background: #fee2e2;
+
+  color: #b91c1c;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+  .assistant-metrics-grid {
+    grid-template-columns: 1fr;
+  }
 }
