@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface PatientSearchProps {
   busqueda: string;
@@ -8,7 +8,7 @@ interface PatientSearchProps {
 
 export const PatientSearch: React.FC<PatientSearchProps> = ({ busqueda, onSearchChange }) => {
   return (
-    <div 
+    <div
       className="animate-fade-in"
       style={{
         display: 'flex',
@@ -20,7 +20,7 @@ export const PatientSearch: React.FC<PatientSearchProps> = ({ busqueda, onSearch
     >
       {/* Contenedor del Buscador */}
       <div style={{ position: 'relative', flex: 1 }}>
-        <span 
+        <span
           style={{
             position: 'absolute',
             top: 0,

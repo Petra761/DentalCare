@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { UserPlus, Download, Users, BarChart3 } from "lucide-react";
+import { UserPlus, Users, BarChart3 } from "lucide-react";
 
 interface PatientHeaderProps {
   totalPacientes: number;
@@ -14,7 +14,7 @@ export const PatientHeader: React.FC<PatientHeaderProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div 
+    <div
       className="animate-fade-in"
       style={{
         display: 'grid',
@@ -24,7 +24,7 @@ export const PatientHeader: React.FC<PatientHeaderProps> = ({
       }}
     >
       {/* Tarjeta Izquierda: Mensaje y Acciones */}
-      <div 
+      <div
         className="fc-card"
         style={{
           gridColumn: 'span 2',
@@ -37,7 +37,7 @@ export const PatientHeader: React.FC<PatientHeaderProps> = ({
         }}
       >
         {/* Background silhouette/decoration */}
-        <div 
+        <div
           style={{
             position: 'absolute',
             right: '-20px',
@@ -75,7 +75,7 @@ export const PatientHeader: React.FC<PatientHeaderProps> = ({
       </div>
 
       {/* Tarjeta Derecha: Total de Pacientes */}
-      <div 
+      <div
         style={{
           background: 'linear-gradient(135deg, #009688, #004D40)',
           borderRadius: '16px',
