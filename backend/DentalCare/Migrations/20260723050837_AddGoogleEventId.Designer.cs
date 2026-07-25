@@ -3,6 +3,7 @@ using System;
 using DentalCare.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DentalCare.Migrations
 {
     [DbContext(typeof(DentalCareContext))]
-    partial class DentalCareContextModelSnapshot : ModelSnapshot
+    [Migration("20260723050837_AddGoogleEventId")]
+    partial class AddGoogleEventId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -166,7 +169,7 @@ namespace DentalCare.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("FechaNacimiento")
+                    b.Property<DateOnly>("FechaNacimiento")
                         .HasColumnType("date");
 
                     b.Property<string>("Nombre")
@@ -289,8 +292,7 @@ namespace DentalCare.Migrations
 
                     b.Property<string>("Contrasenia")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasAnnotation("Relational:JsonPropertyName", "contrasena");
+                        .HasColumnType("text");
 
                     b.Property<string>("Estado")
                         .IsRequired()

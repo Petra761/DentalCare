@@ -35,6 +35,7 @@ export interface Cliente {
   nombre: string;
   apellidoPaterno: string;
   apellidoMaterno: string;
+  nombreCompleto?: string;
   tipoSangre: string;
   telefono: string;
   fechaNacimiento: string;
@@ -450,9 +451,23 @@ export const apiService = {
       localStorage.setItem('dental_db_clientes', JSON.stringify(defaultMock));
       return defaultMock;
     }
-    const res = await fetch(`${BASE_URL}/Clientes`, { headers: getHeaders() });
+    const res = await fetch(`${BASE_URL}/Clientes?pagina=1&limite=1000`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Error al obtener clientes');
-    return await res.json();
+    const data = await res.json();
+    // Backend devuelve { TotalPacientes, PaginaActual, PaginasTotales, Pacientes: [...] }
+    // Mapear de PascalCase (backend) a camelCase (frontend)
+    return (data.pacientes || data.Pacientes || []).map((p: any) => ({
+      idCliente: p.idCliente || p.IdCliente,
+      ci: p.ci || p.Ci,
+      nombre: p.nombre || p.Nombre || '',
+      apellidoPaterno: p.apellidoPaterno || p.ApellidoPaterno || '',
+      apellidoMaterno: p.apellidoMaterno || p.ApellidoMaterno || '',
+      nombreCompleto: p.nombreCompleto || p.NombreCompleto || '',
+      tipoSangre: p.tipoSangre || p.TipoSangre || 'No especificado',
+      telefono: p.telefono || p.Telefono || '',
+      fechaNacimiento: p.fechaNacimiento || p.FechaNacimiento || '2000-01-01',
+      estado: p.estado || p.Estado || 'Activo'
+    }));
   },
 
   async getCategorias(): Promise<Categoria[]> {
@@ -500,6 +515,13 @@ export const apiService = {
     }
     const res = await fetch(`${BASE_URL}/Citas`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Error al obtener citas');
+    return await res.json();
+  },
+
+  async getHistorial(): Promise<DbCita[]> {
+    if (isMockMode) return [];
+    const res = await fetch(`${BASE_URL}/Citas/historial`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error al obtener historial');
     return await res.json();
   },
 
