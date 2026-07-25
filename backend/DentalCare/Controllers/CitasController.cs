@@ -762,6 +762,9 @@ namespace DentalCare.Controllers
             // Reagendado (opcional — si se envía, marca la cita anterior como Reagendado)
             public string? FechaActual { get; set; }
             public string? HoraActual { get; set; }
+
+            // Datos del cliente (cuando se crea uno nuevo)
+            public string? ClienteFechaNacimiento { get; set; }
         }
 
         // ─── POST: api/Citas/agendar-desde-n8n ───────────────────────────────
@@ -863,6 +866,13 @@ namespace DentalCare.Controllers
                     if (string.IsNullOrWhiteSpace(dto.ClienteCi) || !int.TryParse(dto.ClienteCi, out var ciNuevo))
                         return BadRequest(new { success = false, mensaje = "El CI (cédula de identidad) es requerido para registrar un nuevo cliente." });
 
+                    DateOnly? fechaNac = null;
+                    if (!string.IsNullOrWhiteSpace(dto.ClienteFechaNacimiento) &&
+                        DateOnly.TryParse(dto.ClienteFechaNacimiento, out var fn))
+                    {
+                        fechaNac = fn;
+                    }
+
                     cliente = new Cliente
                     {
                         Ci = ciNuevo,
@@ -871,7 +881,7 @@ namespace DentalCare.Controllers
                         ApellidoMaterno = "",
                         Telefono = dto.ClienteTelefono ?? "",
                         TipoSangre = "No especificado",
-                        FechaNacimiento = new DateOnly(2000, 1, 1),
+                        FechaNacimiento = fechaNac,
                         Estado = "Activo"
                     };
                     _context.Cliente.Add(cliente);

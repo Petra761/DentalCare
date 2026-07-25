@@ -132,7 +132,7 @@ export const GestionCitas: React.FC = () => {
     for (const c of raw) {
       if (c.estadoCita === 'Confirmada' && isOverdue(c.fecha, c.hora, c.estadoCita)) {
         const client = cli.find(x => x.idCliente === c.idCliente);
-        const datosCompletos = client && client.nombre && client.apellidoPaterno && client.telefono;
+        const datosCompletos = client && client.nombre && client.apellidoPaterno && client.apellidoMaterno && client.telefono && client.tipoSangre && client.tipoSangre !== 'No especificado' && client.fechaNacimiento && client.fechaNacimiento.slice(0,4) !== '0001' && client.fechaNacimiento.slice(0,4) !== '2000';
         if (!datosCompletos) continue;
         try {
           await fetch(`http://localhost:5020/api/Citas/${c.idCita}/estado`, {
@@ -152,7 +152,7 @@ export const GestionCitas: React.FC = () => {
       ]);
       const rawMapped2 = (c: DbCita) => {
         const client  = cli.find(x => x.idCliente === c.idCliente);
-        const datosCompletos = client && client.nombre && client.apellidoPaterno && client.telefono;
+        const datosCompletos = client && client.nombre && client.apellidoPaterno && client.apellidoMaterno && client.telefono && client.tipoSangre && client.tipoSangre !== 'No especificado' && client.fechaNacimiento && client.fechaNacimiento.slice(0,4) !== '0001' && client.fechaNacimiento.slice(0,4) !== '2000';
         const detail  = detalles.find(d => d.idCita === c.idCita);
         const service = detail ? srv.find(s => s.idServicio === detail.idServicio) : null;
         return {
@@ -175,7 +175,7 @@ export const GestionCitas: React.FC = () => {
 
     const rawMapped = (c: DbCita) => {
       const client  = cli.find(x => x.idCliente === c.idCliente);
-      const datosCompletos = client && client.nombre && client.apellidoPaterno && client.telefono;
+      const datosCompletos = client && client.nombre && client.apellidoPaterno && client.apellidoMaterno && client.telefono && client.tipoSangre && client.tipoSangre !== 'No especificado' && client.fechaNacimiento && client.fechaNacimiento.slice(0,4) !== '0001' && client.fechaNacimiento.slice(0,4) !== '2000';
       const detail  = detalles.find(d => d.idCita === c.idCita);
       const service = detail ? srv.find(s => s.idServicio === detail.idServicio) : null;
       return {
@@ -217,8 +217,8 @@ export const GestionCitas: React.FC = () => {
   const handleEdit = async (data:{client:Cliente;service:Servicio;fecha:string;hora:string;medio:string;estado:string}) => {
     if(!editCita) return;
 
-    if (data.estado === 'Completada') {
-      const datosCompletos = data.client.nombre && data.client.apellidoPaterno && data.client.telefono;
+    if (data.estado === 'Completada' && (editCita.estadoCita === 'Pendiente' || editCita.estadoCita === 'Confirmada')) {
+      const datosCompletos = data.client.nombre && data.client.apellidoPaterno && data.client.apellidoMaterno && data.client.telefono && data.client.tipoSangre && data.client.tipoSangre !== 'No especificado' && data.client.fechaNacimiento && data.client.fechaNacimiento.slice(0,4) !== '0001' && data.client.fechaNacimiento.slice(0,4) !== '2000';
       if (!datosCompletos) {
         const ci = data.client.ci?.toString() ?? '';
         await navigator.clipboard.writeText(ci).catch(() => {});
