@@ -35,6 +35,7 @@ export interface Cliente {
   nombre: string;
   apellidoPaterno: string;
   apellidoMaterno: string;
+  nombreCompleto?: string;
   tipoSangre: string;
   telefono: string;
   fechaNacimiento: string;
@@ -458,9 +459,10 @@ export const apiService = {
     return (data.pacientes || data.Pacientes || []).map((p: any) => ({
       idCliente: p.idCliente || p.IdCliente,
       ci: p.ci || p.Ci,
-      nombre: (p.nombre || p.Nombre || (p.nombreCompleto || p.NombreCompleto || '').split(' ')[0] || ''),
-      apellidoPaterno: (p.apellidoPaterno || p.ApellidoPaterno || (p.nombreCompleto || p.NombreCompleto || '').split(' ')[1] || ''),
-      apellidoMaterno: (p.apellidoMaterno || p.ApellidoMaterno || (p.nombreCompleto || p.NombreCompleto || '').split(' ').slice(2).join(' ') || ''),
+      nombre: p.nombre || p.Nombre || '',
+      apellidoPaterno: p.apellidoPaterno || p.ApellidoPaterno || '',
+      apellidoMaterno: p.apellidoMaterno || p.ApellidoMaterno || '',
+      nombreCompleto: p.nombreCompleto || p.NombreCompleto || '',
       tipoSangre: p.tipoSangre || p.TipoSangre || 'No especificado',
       telefono: p.telefono || p.Telefono || '',
       fechaNacimiento: p.fechaNacimiento || p.FechaNacimiento || '2000-01-01',

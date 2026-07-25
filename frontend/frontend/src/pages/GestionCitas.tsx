@@ -10,56 +10,72 @@ const C = {
   primary:     '#009688',
   primaryHov:  '#00796B',
   primaryLight:'#E0F2F1',
-  primaryDark: '#004D40',
+  primaryDark: '#115e59',
   bgPage:      '#F5F9FC',
   bgCard:      '#FFFFFF',
-  bgHov:       '#F8FAFC',
+  bgHov:       '#E0F2F1',
   border:      '#E2E8F0',
   textMain:    '#1A252C',
   textMuted:   '#64748B',
   textLight:   '#94A3B8',
+  bgDanger:    '#FEE2E2',
+  bgNeutral:   '#F1F5F9',
+  bgInfo:      '#E0F2FE',
   shadowSm:    '0 1px 3px rgba(0,0,0,0.05)',
   shadowMd:    '0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03)',
   shadowLg:    '0 10px 15px -3px rgba(0,0,0,0.07),0 4px 6px -2px rgba(0,0,0,0.03)',
-  shadowModal: '0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04)',
+  shadowModal: '0 25px 50px -12px rgba(0,0,0,0.25)',
 };
 
-const STATUS_STYLES: Record<string, {bg:string; color:string}> = {
-  pendiente:  { bg:'#E2E8F0', color:'#475569' },
-  confirmada: { bg:'#E0F2F1', color:'#00796B' },
-  cancelada:  { bg:'#FFEBEE', color:'#C62828' },
-  completada: { bg:'#E0F2F1', color:'#004D40' },
-  reagendado: { bg:'#FFF3E0', color:'#E65100' },
+const STATUS_STYLES: Record<string, {bg:string; color:string; border:string}> = {
+  pendiente:  { bg:'#F1F5F9', color:'#475569', border:'#cbd5e1' },
+  confirmada: { bg:'#DCFCE7', color:'#15803D', border:'#bbf7d0' },
+  cancelada:  { bg:'#FEE2E2', color:'#B91C1C', border:'#fecaca' },
+  completada: { bg:'#E0F2F1', color:'#00796B', border:'#b2dfdb' },
+  reagendado: { bg:'#FEF3C7', color:'#B45309', border:'#fde68a' },
 };
 
 const StatusPill: React.FC<{status:string}> = ({ status }) => {
-  const s = STATUS_STYLES[status.toLowerCase()] ?? { bg:'#F1F5F9', color:'#64748B' };
+  const s = STATUS_STYLES[status.toLowerCase()] ?? { bg:'#F1F5F9', color:'#475569', border:'#cbd5e1' };
   return (
-    <span style={{
+    <span className="fc-badge" style={{
       display:'inline-flex', alignItems:'center',
-      padding:'4px 12px', borderRadius:20,
-      fontSize:12, fontWeight:600,
-      backgroundColor: s.bg, color: s.color,
+      padding:'4px 12px', borderRadius:9999,
+      fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.03em',
+      backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}`,
     }}>
       {status}
     </span>
   );
 };
 
-const AVATAR_COLORS = ['#009688','#00796B','#004D40','#0288D1','#7B1FA2','#E64A19','#388E3C','#F57C00'];
-const pickColor = (s:string) => AVATAR_COLORS[s.charCodeAt(0) % AVATAR_COLORS.length];
+const getAvatarStyle = (initials: string) => {
+  const code = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
+  const palettes = [
+    { bg: '#E0F2F1', text: '#00796B' },
+    { bg: '#E0F2FE', text: '#0369A1' },
+    { bg: '#F1F5F9', text: '#475569' },
+    { bg: '#DCFCE7', text: '#15803D' },
+    { bg: '#FEE2E2', text: '#B91C1C' },
+    { bg: '#FEF3C7', text: '#B45309' },
+  ];
+  return palettes[code % palettes.length];
+};
 
-const Avatar: React.FC<{initials:string}> = ({ initials }) => (
-  <div style={{
-    width:36, height:36, borderRadius:'50%',
-    backgroundColor: pickColor(initials),
-    color:'#fff', display:'flex', alignItems:'center',
-    justifyContent:'center', fontWeight:600,
-    fontSize:13, textTransform:'uppercase', flexShrink:0,
-  }}>
-    {initials.slice(0,2)}
-  </div>
-);
+const Avatar: React.FC<{initials:string}> = ({ initials }) => {
+  const style = getAvatarStyle(initials);
+  return (
+    <div style={{
+      width:36, height:36, borderRadius:'50%',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      fontWeight:'bold', fontSize:13, textTransform:'uppercase',
+      backgroundColor: style.bg, color: style.text, flexShrink:0,
+      boxShadow:'0 1px 2px rgba(0,0,0,0.05)',
+    }}>
+      {initials.slice(0,2)}
+    </div>
+  );
+};
 
 const fmtDate = (d:string) => {
   if(!d) return '';
@@ -158,9 +174,9 @@ export const GestionCitas: React.FC = () => {
         return {
           ...c,
           clientDataComplete: !!datosCompletos,
-          clientName:    client ? `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno}`.trim() : 'Desconocido',
+          clientName:    client ? (client.nombreCompleto || `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno}`.trim()) : 'Desconocido',
           clientCi:      client ? client.ci.toString() : 'N/A',
-          clientFirstChar: client ? `${client.nombre[0]}${client.apellidoPaterno[0]}` : 'NA',
+          clientFirstChar: client ? `${(client.nombre || client.nombreCompleto || '?')[0]}${(client.apellidoPaterno || (client.nombreCompleto || '').split(' ')[1] || '?')[0]}` : 'NA',
           serviceName:   service ? service.nombre : 'No asignado',
           _clientObj:    client  ?? null,
           _serviceObj:   service ?? null,
@@ -181,9 +197,9 @@ export const GestionCitas: React.FC = () => {
       return {
         ...c,
         clientDataComplete: !!datosCompletos,
-        clientName:    client ? `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno}`.trim() : 'Desconocido',
+        clientName:    client ? (client.nombreCompleto || `${client.nombre} ${client.apellidoPaterno} ${client.apellidoMaterno}`.trim()) : 'Desconocido',
         clientCi:      client ? client.ci.toString() : 'N/A',
-        clientFirstChar: client ? `${client.nombre[0]}${client.apellidoPaterno[0]}` : 'NA',
+        clientFirstChar: client ? `${(client.nombre || client.nombreCompleto || '?')[0]}${(client.apellidoPaterno || (client.nombreCompleto || '').split(' ')[1] || '?')[0]}` : 'NA',
         serviceName:   service ? service.nombre : 'No asignado',
         _clientObj:    client  ?? null,
         _serviceObj:   service ?? null,
@@ -384,39 +400,131 @@ export const GestionCitas: React.FC = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        @keyframes slideUp {
-          from { opacity:0; transform:translateY(20px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes fadeIn {
-          from { opacity:0; transform:translateY(8px); }
-          to   { opacity:1; transform:translateY(0); }
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        .appt-row:hover { background-color: #F8FAFC !important; }
-        .btn-manage:hover { background-color: #E0F2F1 !important; }
-        .filter-opt:hover { color:#1A252C; background-color:#F8FAFC; }
-        .sugg-item:hover { background-color:#E0F2F1 !important; color:#004D40 !important; font-weight:500; }
+        .animate-fade-in {
+          animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .fc-card {
+          background-color: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          border-radius: 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          transition: all 0.3s ease;
+        }
+        .fc-card:hover {
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);
+        }
+        .fc-input {
+          width: 100%;
+          padding: 10px 14px;
+          border-radius: 12px;
+          border: 1px solid #E2E8F0;
+          font-size: 14px;
+          color: #1A252C;
+          background-color: #FFFFFF;
+          outline: none;
+          transition: all 0.2s ease;
+          box-sizing: border-box;
+        }
+        .fc-input:focus {
+          border-color: #009688;
+          background-color: #FFFFFF;
+          box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.15);
+        }
+        .fc-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .fc-th {
+          background-color: #F8FAFC;
+          padding: 16px 24px;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          color: #64748B;
+          border-bottom: 1px solid #E2E8F0;
+          letter-spacing: 0.05em;
+        }
+        .fc-td {
+          padding: 16px 24px;
+          font-size: 14px;
+          color: #1A252C;
+          border-bottom: 1px solid #E2E8F0;
+        }
+        .fc-tr { transition: background-color 0.15s ease; }
+        .fc-tr:hover { background-color: #F8FAFC; }
+        .fc-btn-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background-color: #009688;
+          color: #FFFFFF;
+          font-weight: 600;
+          font-size: 14px;
+          padding: 10px 18px;
+          border-radius: 12px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .fc-btn-primary:hover { background-color: #00796B; }
+        .fc-btn-primary:active { transform: scale(0.97); }
+        .fc-btn-outline {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background-color: #FFFFFF;
+          color: #009688;
+          border: 1px solid #009688;
+          font-weight: 600;
+          font-size: 14px;
+          padding: 10px 18px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .fc-btn-outline:hover { background-color: #F8FAFC; }
+        .fc-btn-outline:active { transform: scale(0.97); }
+        .fc-btn-ghost {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background-color: #FFFFFF;
+          color: #64748B;
+          border: 1px solid #E2E8F0;
+          font-weight: 600;
+          font-size: 14px;
+          padding: 10px 18px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .fc-btn-ghost:hover { background-color: #F8FAFC; color: #009688; border-color: #009688; }
+        .filter-opt:hover { color:#00796B; background-color:#E0F2F1; }
         input:focus, select:focus {
           outline:none;
           border-color:#009688 !important;
-          background-color:#fff !important;
-          box-shadow: 0 0 0 3px rgba(0,150,136,0.15) !important;
+          box-shadow:0 0 0 3px rgba(0,150,136,0.15) !important;
         }
       `}</style>
 
       <div style={{
-        fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
+        fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",
         backgroundColor:C.bgPage, minHeight:'100vh', color:C.textMain,
-        lineHeight:1.5, WebkitFontSmoothing:'antialiased',
+        lineHeight:1.5, WebkitFontSmoothing:'antialiased', padding:'32px',
       }}>
 
         <div style={{
-          maxWidth:1200, margin:'0 auto', padding:'0 24px',
+          maxWidth:1100, margin:'0 auto',
           animation:'fadeIn 0.4s ease-out',
+          display:'flex', flexDirection:'column', gap:'24px',
         }}>
           {/* Header */}
-          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
             <div>
               <h1 style={{fontSize:28, fontWeight:700, color:C.textMain, marginBottom:6}}>
                 Gesti&oacute;n de Citas
@@ -426,12 +534,11 @@ export const GestionCitas: React.FC = () => {
               </p>
             </div>
             {tab === 'agenda' && (
-              <button onClick={()=>setShowNew(true)} style={{
+              <button onClick={()=>setShowNew(true)} className="fc-btn-primary" style={{
                 display:'inline-flex', alignItems:'center', gap:8,
-                fontSize:14, fontWeight:600, padding:'10px 20px',
-                borderRadius:8, border:'1px solid transparent',
-                backgroundColor:C.primaryDark, color:'#fff', cursor:'pointer',
-                boxShadow:`0 2px 8px rgba(0,77,64,0.2)`,
+                fontSize:14, fontWeight:600, padding:'10px 18px',
+                borderRadius:12, border:'none',
+                backgroundColor:'#009688', color:'#fff', cursor:'pointer',
                 transition:'all 0.2s ease',
               }}>
                 + Nueva Cita
@@ -441,7 +548,7 @@ export const GestionCitas: React.FC = () => {
 
           {/* Tabs */}
           <div style={{
-            display:'flex', gap:0, marginBottom:24,
+            display:'flex', gap:0,
             borderBottom:`2px solid ${C.border}`,
           }}>
             {([['agenda','Agenda',agendaCitas.length],['historial','Historial',historialCitas.length]] as const).map(([val,lbl,count]) => (
@@ -452,8 +559,8 @@ export const GestionCitas: React.FC = () => {
                   fontFamily:'inherit', fontSize:14, fontWeight:600,
                   padding:'10px 22px', border:'none', background:'none',
                   cursor:'pointer', transition:'all 0.2s ease',
-                  color: tab===val ? C.primaryDark : C.textMuted,
-                  borderBottom: tab===val ? `2px solid ${C.primaryDark}` : '2px solid transparent',
+                  color: tab===val ? '#009688' : C.textMuted,
+                  borderBottom: tab===val ? `2px solid #009688` : '2px solid transparent',
                   marginBottom:-2,
                   display:'flex', alignItems:'center', gap:7,
                 }}
@@ -461,8 +568,8 @@ export const GestionCitas: React.FC = () => {
                 {lbl}
                 <span style={{
                   fontSize:11, fontWeight:700,
-                  backgroundColor: tab===val ? C.primaryLight : '#F1F5F9',
-                  color: tab===val ? C.primaryDark : C.textMuted,
+                  backgroundColor: tab===val ? '#E0F2F1' : '#F1F5F9',
+                  color: tab===val ? '#00796B' : C.textMuted,
                   padding:'1px 7px', borderRadius:99,
                 }}>
                   {count}
@@ -472,11 +579,11 @@ export const GestionCitas: React.FC = () => {
           </div>
 
           {/* Controls */}
-          <div style={{
+          <div className="fc-card" style={{
             display:'flex', justifyContent:'space-between', alignItems:'center',
-            gap:20, marginBottom:24,
-            backgroundColor:C.bgCard, padding:'16px 24px',
-            borderRadius:12, boxShadow:C.shadowSm,
+            gap:20,
+            backgroundColor:'#FFFFFF', padding:'16px 24px',
+            borderRadius:16, boxShadow:C.shadowSm,
             border:`1px solid ${C.border}`,
           }}>
             {/* Search */}
@@ -490,10 +597,11 @@ export const GestionCitas: React.FC = () => {
                 placeholder={tab === 'agenda' ? 'Buscar por Nombre o CI...' : 'Buscar en historial...'}
                 value={query}
                 onChange={e=>setQuery(e.target.value)}
+                className="fc-input"
                 style={{
-                  width:'100%', padding:'12px 16px 12px 48px', fontFamily:'inherit',
-                  fontSize:14, border:`1px solid ${C.border}`, borderRadius:30,
-                  backgroundColor:'#F1F5F9', color:C.textMain, boxSizing:'border-box',
+                  width:'100%', padding:'10px 14px 10px 48px', fontFamily:'inherit',
+                  fontSize:14, border:`1px solid ${C.border}`, borderRadius:12,
+                  backgroundColor:'#FFFFFF', color:C.textMain, boxSizing:'border-box',
                   transition:'all 0.2s ease', outline:'none',
                 }}
               />
@@ -508,11 +616,11 @@ export const GestionCitas: React.FC = () => {
                   onClick={()=>setDateFilter(f.value)}
                   className="filter-opt"
                   style={{
-                    fontFamily:'inherit', fontSize:13, fontWeight: dateFilter===f.value?600:500,
-                    padding:'6px 14px', borderRadius:30,
-                    border:'1px solid transparent',
-                    backgroundColor: dateFilter===f.value ? C.primaryLight : 'transparent',
-                    color: dateFilter===f.value ? C.primaryHov : C.textMuted,
+                    fontFamily:'inherit', fontSize:13, fontWeight: dateFilter===f.value?700:500,
+                    padding:'6px 14px', borderRadius:12,
+                    border: dateFilter===f.value ? '1px solid #009688' : '1px solid #E2E8F0',
+                    backgroundColor: dateFilter===f.value ? '#E0F2F1' : '#FFFFFF',
+                    color: dateFilter===f.value ? '#00796B' : C.textMuted,
                     cursor:'pointer', transition:'all 0.2s ease',
                   }}
                 >
@@ -529,11 +637,11 @@ export const GestionCitas: React.FC = () => {
                   onClick={()=>setFilter(f.value)}
                   className="filter-opt"
                   style={{
-                    fontFamily:'inherit', fontSize:13, fontWeight: filter===f.value?600:500,
-                    padding:'6px 14px', borderRadius:30,
-                    border:'1px solid transparent',
-                    backgroundColor: filter===f.value ? C.primaryLight : 'transparent',
-                    color: filter===f.value ? C.primaryHov : C.textMuted,
+                    fontFamily:'inherit', fontSize:13, fontWeight: filter===f.value?700:500,
+                    padding:'6px 14px', borderRadius:12,
+                    border: filter===f.value ? '1px solid #009688' : '1px solid #E2E8F0',
+                    backgroundColor: filter===f.value ? '#E0F2F1' : '#FFFFFF',
+                    color: filter===f.value ? '#00796B' : C.textMuted,
                     cursor:'pointer', transition:'all 0.2s ease',
                   }}
                 >
@@ -544,17 +652,17 @@ export const GestionCitas: React.FC = () => {
           </div>
 
           {/* Table */}
-          <div style={{
-            backgroundColor:C.bgCard, borderRadius:12,
-            boxShadow:C.shadowMd, border:`1px solid ${C.border}`, overflow:'hidden',
+          <div className="fc-card" style={{
+            backgroundColor:'#FFFFFF', borderRadius:16,
+            boxShadow:C.shadowSm, border:`1px solid ${C.border}`, overflow:'hidden',
           }}>
-            <table style={{width:'100%', borderCollapse:'collapse', textAlign:'left'}}>
+            <table className="fc-table" style={{width:'100%', borderCollapse:'collapse', textAlign:'left'}}>
               <thead>
                 <tr>
                   {['Cliente','Fecha & Hora','Tratamiento','Estado','Acciones'].map((h,i) => (
-                    <th key={h} style={{
+                    <th key={h} className="fc-th" style={{
                       backgroundColor:'#F8FAFC', padding:'16px 24px',
-                      fontSize:12, fontWeight:600, textTransform:'uppercase',
+                      fontSize:11, fontWeight:600, textTransform:'uppercase',
                       letterSpacing:'0.05em', color:C.textMuted,
                       borderBottom:`1px solid ${C.border}`,
                       textAlign: i===4 ? 'right' : 'left',
@@ -567,73 +675,75 @@ export const GestionCitas: React.FC = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={5} style={{padding:40, textAlign:'center', color:C.textMuted, fontStyle:'italic'}}>
+                    <td colSpan={5} className="fc-td" style={{padding:40, textAlign:'center', color:C.textMuted, fontStyle:'italic'}}>
                       Cargando citas...
                     </td>
                   </tr>
                 ) : filtered.length===0 ? (
                   <tr>
-                    <td colSpan={5} style={{padding:40, textAlign:'center', color:C.textMuted}}>
+                    <td colSpan={5} className="fc-td" style={{padding:40, textAlign:'center', color:C.textMuted}}>
                       No se encontraron citas.
                     </td>
                   </tr>
                 ) : filtered.map(cita => (
-                  <tr key={cita.idCita} className="appt-row" style={{
+                  <tr key={cita.idCita} className="fc-tr" style={{
                     borderBottom:`1px solid ${C.border}`, transition:'background-color 0.15s ease',
                   }}>
-                    <td style={{padding:'16px 24px', verticalAlign:'middle', fontSize:14}}>
+                    <td className="fc-td" style={{padding:'16px 24px', verticalAlign:'middle', fontSize:14}}>
                       <div style={{display:'flex', alignItems:'center', gap:12}}>
                         <Avatar initials={cita.clientFirstChar||'NA'} />
                         <div>
-                          <div style={{fontWeight:600, color:C.textMain}}>{cita.clientName}</div>
+                          <div style={{fontWeight:'bold', color:'#1A252C'}}>{cita.clientName}</div>
                           <div style={{fontSize:12, color:C.textMuted, marginTop:2}}>CI: {cita.clientCi}</div>
                         </div>
                       </div>
                     </td>
-                    <td style={{padding:'16px 24px', verticalAlign:'middle', fontSize:14}}>
+                    <td className="fc-td" style={{padding:'16px 24px', verticalAlign:'middle', fontSize:14}}>
                       <div style={{color:C.textMuted}}>{fmtDate(cita.fecha)}</div>
-                      <div style={{fontWeight:600, color:C.primaryHov, marginTop:2, display:'flex', alignItems:'center', gap:6}}>
+                      <div style={{fontWeight:600, color:'#00796B', marginTop:2, display:'flex', alignItems:'center', gap:6}}>
                         {fmtTime(cita.hora)}
                         {isOverdue(cita.fecha, cita.hora, cita.estadoCita) && (
                           <span title="Esta cita ya pasó su horario y aún no fue cerrada." style={{
-                            fontSize:10, fontWeight:700, color:'#C62828',
-                            backgroundColor:'#FFEBEE', padding:'2px 6px',
-                            borderRadius:99, letterSpacing:'0.03em',
+                            fontSize:10, fontWeight:700, color:'#B91C1C',
+                            backgroundColor:'#FEE2E2', padding:'2px 6px',
+                            borderRadius:99, letterSpacing:'0.03em', border:'1px solid #fecaca',
                           }}>
                             Vencida
                           </span>
                         )}
                         {(cita as any).clientDataComplete === false && cita.estadoCita !== 'Completada' && cita.estadoCita !== 'Cancelada' && (
-                          <span title="El cliente tiene datos incompletos. Complete nombre, apellido y teléfono." style={{
-                            fontSize:10, fontWeight:700, color:'#E65100',
-                            backgroundColor:'#FFF3E0', padding:'2px 6px',
-                            borderRadius:99, letterSpacing:'0.03em',
+                          <span title="El cliente tiene datos incompletos." style={{
+                            fontSize:10, fontWeight:700, color:'#B45309',
+                            backgroundColor:'#FEF3C7', padding:'2px 6px',
+                            borderRadius:99, letterSpacing:'0.03em', border:'1px solid #fde68a',
                           }}>
                             Datos incompletos
                           </span>
                         )}
                       </div>
                     </td>
-                    <td style={{padding:'16px 24px', verticalAlign:'middle', fontSize:14}}>
+                    <td className="fc-td" style={{padding:'16px 24px', verticalAlign:'middle', fontSize:14}}>
                       <span style={{
-                        display:'inline-block', padding:'6px 12px', borderRadius:6,
+                        display:'inline-block', padding:'6px 12px', borderRadius:8,
                         backgroundColor:'#F1F5F9', color:C.textMuted, fontSize:13, fontWeight:500,
                       }}>
                         {cita.serviceName}
                       </span>
                     </td>
-                    <td style={{padding:'16px 24px', verticalAlign:'middle'}}>
+                    <td className="fc-td" style={{padding:'16px 24px', verticalAlign:'middle'}}>
                       <StatusPill status={cita.estadoCita} />
                     </td>
-                    <td style={{padding:'16px 24px', verticalAlign:'middle', textAlign:'right'}}>
+                    <td className="fc-td" style={{padding:'16px 24px', verticalAlign:'middle', textAlign:'right'}}>
                       <button
-                        className="btn-manage"
                         onClick={()=>setEditCita(cita)}
+                        className="fc-btn-outline"
                         style={{
-                          color:C.primaryHov, background:'none', border:'none',
-                          fontFamily:'inherit', fontWeight:600, fontSize:14,
-                          cursor:'pointer', padding:'4px 8px', borderRadius:4,
-                          transition:'background-color 0.15s ease',
+                          display:'inline-flex', alignItems:'center',
+                          color:'#009688', backgroundColor:'#FFFFFF',
+                          border:'1px solid #009688', fontWeight:600,
+                          fontSize:13, padding:'8px 14px', borderRadius:12,
+                          cursor:'pointer', transition:'all 0.2s ease',
+                          fontFamily:'inherit',
                         }}
                       >
                         Gestionar
