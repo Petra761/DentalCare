@@ -60,6 +60,11 @@ namespace DentalCare.Controllers
                     c.IdCliente,
                     c.Ci,
                     NombreCompleto = (c.Nombre + " " + c.ApellidoPaterno + " " + c.ApellidoMaterno).Trim(),
+                    c.Nombre,
+                    c.ApellidoPaterno,
+                    c.ApellidoMaterno,
+                    c.TipoSangre,
+                    c.FechaNacimiento,
                     Telefono = c.Telefono ?? "",
                     c.Estado
                 })

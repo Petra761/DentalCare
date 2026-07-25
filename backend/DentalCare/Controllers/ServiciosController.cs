@@ -42,6 +42,34 @@ namespace DentalCare.Controllers
             return servicio;
         }
 
+        // GET: api/Servicios/catalogo (para AI Agent - servicios con categorías y duración)
+        [HttpGet("catalogo")]
+        public async Task<ActionResult> GetCatalogo()
+        {
+            var servicios = await _context.Servicio
+                .Where(s => s.Estado == "Activo" && s.EstadoServicio == "Disponible")
+                .Include(s => s.Categoria)
+                .OrderBy(s => s.Categoria!.Nombre)
+                .ThenBy(s => s.Nombre)
+                .ToListAsync();
+
+            var resultado = servicios.Select(s => new
+            {
+                s.IdServicio,
+                s.Nombre,
+                s.Descripcion,
+                DuracionMinutos = s.Duracion.Hour * 60 + s.Duracion.Minute,
+                DuracionTexto = s.Duracion.ToString(@"hh\:mm"),
+                Categoria = s.Categoria?.Nombre ?? "General"
+            });
+
+            return Ok(new
+            {
+                success = true,
+                servicios = resultado
+            });
+        }
+
         // PUT: api/Servicios/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
