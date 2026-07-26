@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AgendaHeader from "../components/Agenda/AgendaHeader";
@@ -29,25 +29,39 @@ const AgendaPage: React.FC = () => {
     setSelectedDate(newDate.toISOString().split("T")[0]);
   };
 
-  const citasFiltradasYOrdenadas = citas
-    .filter((cita) => {
-      const cumpleFecha = cita.fecha?.startsWith(selectedDate);
-      const cumpleNombre = cita.nombrePaciente
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const cumpleServicio =
-        filterServicio === "" ||
-        cita.detalleCitas.some(
-          (d: any) => d.idServicio.toString() === filterServicio,
-        );
-      return cumpleFecha && cumpleNombre && cumpleServicio;
-    })
-    .sort((a, b) => a.hora.localeCompare(b.hora));
+  const citasFiltradasYOrdenadas = useMemo(() => {
+    return citas
+      .filter((cita) => {
+        const cumpleFecha = cita.fecha?.startsWith(selectedDate);
+        const cumpleNombre = cita.nombrePaciente
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+        const cumpleServicio =
+          filterServicio === "" ||
+          cita.idServicio?.toString() === filterServicio;
+
+        return cumpleFecha && cumpleNombre && cumpleServicio;
+      })
+      .sort((a, b) => a.hora.localeCompare(b.hora));
+  }, [citas, selectedDate, searchTerm, filterServicio]);
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-primary font-bold animate-pulse">
+            Cargando agenda clínica...
+          </p>
+        </div>
+      </div>
+    );
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#f8f9ff] print:p-0"
     >
       <AgendaHeader
@@ -94,17 +108,17 @@ const AgendaPage: React.FC = () => {
       </div>
 
       <motion.button
-        whileHover={{ scale: 1.1, boxShadow: "0px 10px 30px rgba(0,150,136,0.4)" }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05, y: -5 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => navigate("/gestion-citas")}
-        className="fixed bottom-10 right-10 w-16 h-16 bg-[#009688] text-white rounded-2xl shadow-2xl flex items-center justify-center z-[60] group print:hidden border-b-4 border-[#00796b]"
+        className="fixed bottom-10 right-10 w-16 h-16 bg-primary text-white rounded-2xl shadow-[0_10px_25px_-5px_rgba(0,150,136,0.5)] flex items-center justify-center z-[60] group print:hidden border-b-4 border-secondary"
       >
         <span className="material-symbols-outlined text-[32px] font-bold">
           add
         </span>
-        <span className="absolute right-20 bg-slate-900 text-white px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap text-sm font-bold shadow-xl translate-x-4 group-hover:translate-x-0">
+        <div className="absolute right-20 bg-on-surface text-white px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap text-sm font-bold shadow-xl translate-x-4 group-hover:translate-x-0">
           Nueva Cita
-        </span>
+        </div>
       </motion.button>
     </motion.div>
   );

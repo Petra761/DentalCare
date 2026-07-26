@@ -1,6 +1,6 @@
 import React from "react";
 import type { DbCita, Cliente } from "../../services/api";
-import "../../pages/dashboard/Dashboard.css";
+import "../../pages/Dashboard/Dashboard.css";
 
 import {
   FaWhatsapp,
