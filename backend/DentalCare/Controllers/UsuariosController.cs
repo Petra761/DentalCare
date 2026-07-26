@@ -1,5 +1,6 @@
 using DentalCare.Clases;
 using DentalCare.Data;
+using DentalCare.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.Data;
@@ -103,7 +104,10 @@ namespace DentalCare.Controllers
             {
                 return BadRequest("La contraseña es requerida y debe tener al menos 8 caracteres.");
             }
-            usuario.Contrasenia = dto.Contrasenia;
+            if (usuario.Contrasenia != dto.Contrasenia)
+            {
+                usuario.Contrasenia = PasswordHasher.Hash(dto.Contrasenia);
+            }
 
             _context.Entry(usuario).State = EntityState.Modified;
 
@@ -146,7 +150,7 @@ namespace DentalCare.Controllers
                 IdRol = dto.IdRol,
                 Codigo = dto.Codigo,
                 NombreUsuario = dto.NombreUsuario,
-                Contrasenia = dto.Contrasenia,
+                Contrasenia = PasswordHasher.Hash(dto.Contrasenia),
                 Estado = "Activo"
             };
 
@@ -194,11 +198,9 @@ namespace DentalCare.Controllers
     {
         var usuario = await _context.Usuario
             .Include(u => u.Rol)
-            .FirstOrDefaultAsync(u =>
-                u.NombreUsuario == request.NombreUsuario &&
-                u.Contrasenia == request.Contrasena);
+            .FirstOrDefaultAsync(u => u.NombreUsuario == request.NombreUsuario);
 
-        if (usuario == null)
+        if (usuario == null || !PasswordHasher.Verify(request.Contrasena, usuario.Contrasenia))
         {
             return Unauthorized(new
             {

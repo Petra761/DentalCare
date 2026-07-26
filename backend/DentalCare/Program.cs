@@ -105,7 +105,7 @@ void SeedDatabase(DentalCareContext context)
             IdRol = rol.IdRol,
             Codigo = "USR001",
             NombreUsuario = "admin",
-            Contrasenia = "admin123",
+            Contrasenia = PasswordHasher.Hash("admin123"),
             Estado = "Activo"
         };
         context.Usuario.Add(user);
