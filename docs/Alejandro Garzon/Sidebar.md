@@ -1,32 +1,22 @@
 # 📍 Épica: Navegación del Sistema
 
-## 📌 Historia de Usuario
+# 📍 Historia de Usuario
 
-### HU-NAV-001 — Barra lateral de navegación (Sidebar)
+## HU-NAV-001 — Barra lateral de navegación (Sidebar)
 
-**Como** usuario autenticado,  
-**quiero** una barra lateral que me permita navegar entre los módulos del sistema según mi rol,  
-**para** acceder rápidamente a las funcionalidades que tengo permitidas.
-
+**Como** usuario del sistema,  
+**quiero** contar con un menú lateral (Sidebar) que me permita acceder rápidamente a las diferentes secciones de la aplicación,  
+**para** navegar de forma sencilla, eficiente y de acuerdo con los permisos asignados a mi rol.
 ---
 
-# ✅ Criterios de Aceptación
+# ✅ Criterios de Validación del Sidebar
 
-- El sidebar debe mostrar el logo y nombre de la clínica (**DentalCare**).
-- Debe contener enlaces de navegación a:
-  - Dashboard
-  - Agenda
-  - Pacientes
-  - Tratamientos
-  - Reportes
-  - Usuarios
-- Los enlaces **Dashboard** y **Usuarios** deben ser visibles únicamente para usuarios con rol **Administrador**.
-- El elemento activo debe resaltarse visualmente.
-- En dispositivos móviles debe mostrarse como un menú desplegable con **overlay** (backdrop).
-- Debe mostrar la información del usuario autenticado (nombre y rol) en la parte inferior.
-- Debe incluir un botón **Cerrar Sesión** que elimine la sesión y redirija al inicio de sesión.
-- En dispositivos móviles debe cerrarse automáticamente al seleccionar un enlace.
-
+| Código | Descripción |
+|---------|-------------|
+| **DCJ-49** | El Sidebar debe mostrarse únicamente a usuarios autenticados. |
+| **DCJ-50** | Debe contener las opciones de navegación correspondientes al rol del usuario. |
+| **DCJ-51** | Al seleccionar una opción, el sistema debe redirigir al módulo correspondiente. |
+| **DCJ-52** | Debe incluir una opción para cerrar sesión. |
 ---
 
 # 📋 Subtareas

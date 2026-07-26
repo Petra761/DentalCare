@@ -4,42 +4,21 @@
 
 ### Historia de usuario
 
-> **Como** administrador,  
-> **quiero** gestionar los usuarios del sistema (crear, editar, listar y eliminar lógicamente),  
-> **para** controlar el acceso del personal a la clínica dental según sus roles y permisos.
-
+**Como** administrador del sistema,  
+**quiero** gestionar los usuarios mediante las opciones de registrar, consultar, editar, desactivar y eliminar cuentas de usuario,  
+**para** mantener un control eficiente sobre el acceso al sistema, garantizar que la información de los usuarios esté actualizada y asignar los permisos correspondientes según el rol de cada usuario.
 ---
 
 # ✅ Criterios de aceptación
 
-- [ ] La pantalla debe listar todos los usuarios activos en una tabla paginada.
-- [ ] Cada usuario debe mostrar:
-  - Código.
-  - Nombre de usuario.
-  - Rol, mediante un badge visual.
-  - Estado, indicando Activo/Inactivo.
-- [ ] Se debe poder buscar usuarios por:
-  - Nombre.
-  - Código.
-  - Rol.
-- [ ] Se debe poder filtrar usuarios por:
-  - Rol.
-  - Estado.
-- [ ] Se debe poder crear un nuevo usuario con:
-  - Código.
-  - Nombre de usuario.
-  - Contraseña de mínimo 8 caracteres.
-  - Rol.
-- [ ] Se debe poder editar un usuario existente.
-- [ ] El cambio de contraseña durante la edición debe ser opcional.
-- [ ] El botón **Eliminar** debe desactivar al usuario mediante eliminación lógica.
-- [ ] No se debe eliminar físicamente el registro de la base de datos.
-- [ ] Se debe mostrar un modal con formulario para crear o editar usuarios.
-- [ ] Se debe poder exportar la lista de usuarios a formato JSON.
-- [ ] Se deben mostrar estadísticas relacionadas con los usuarios:
-  - Total de usuarios.
-  - Roles definidos.
-  - Otras estadísticas disponibles.
+
+- **DCU-55:** Solo los usuarios con rol **Administrador** pueden acceder al listado de usuarios.
+- **DCU-56:** El sistema muestra todos los usuarios registrados con su nombre, correo o usuario, rol y estado.
+- **DCU-57:** El administrador puede buscar usuarios por nombre, usuario o correo.
+- **DCU-58:** El usuario eliminado ya no aparece en el listado de usuarios ni puede acceder al sistema.
+- **DCU-59:** El sistema permite ingresar los datos obligatorios del usuario (nombre, usuario, contraseña y rol).
+- **DCU-60:** Si ocurre un error o faltan datos obligatorios, el sistema muestra un mensaje indicando la causa del problema.
+
 
 ---
 
