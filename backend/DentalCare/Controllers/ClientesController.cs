@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -123,7 +124,17 @@ namespace DentalCare.Controllers
                 return BadRequest(ModelState);
             }
 
-            
+            var soloLetras = new Regex(@"^[a-zA-ZáéíóúüñÑÁÉÍÓÚÜ\s]+$");
+            if (!string.IsNullOrWhiteSpace(clienteDto.Nombre) && !soloLetras.IsMatch(clienteDto.Nombre))
+                return BadRequest(new { mensaje = "El nombre solo puede contener letras y espacios." });
+            if (!string.IsNullOrWhiteSpace(clienteDto.ApellidoPaterno) && !soloLetras.IsMatch(clienteDto.ApellidoPaterno))
+                return BadRequest(new { mensaje = "El apellido paterno solo puede contener letras y espacios." });
+            if (!string.IsNullOrWhiteSpace(clienteDto.ApellidoMaterno) && !soloLetras.IsMatch(clienteDto.ApellidoMaterno))
+                return BadRequest(new { mensaje = "El apellido materno solo puede contener letras y espacios." });
+
+            if (!string.IsNullOrWhiteSpace(clienteDto.Telefono) && !clienteDto.Telefono.All(char.IsDigit))
+                return BadRequest(new { mensaje = "El teléfono solo puede contener números." });
+
             var clienteExistente = await _context.Cliente
                 .Include(c => c.AlergiaClientes)
                 .FirstOrDefaultAsync(c => c.IdCliente == id);
@@ -188,6 +199,17 @@ namespace DentalCare.Controllers
             {
                 return BadRequest(ModelState);
             }
+
+            var soloLetras = new Regex(@"^[a-zA-ZáéíóúüñÑÁÉÍÓÚÜ\s]+$");
+            if (!string.IsNullOrWhiteSpace(cliente.Nombre) && !soloLetras.IsMatch(cliente.Nombre))
+                return BadRequest(new { mensaje = "El nombre solo puede contener letras y espacios." });
+            if (!string.IsNullOrWhiteSpace(cliente.ApellidoPaterno) && !soloLetras.IsMatch(cliente.ApellidoPaterno))
+                return BadRequest(new { mensaje = "El apellido paterno solo puede contener letras y espacios." });
+            if (!string.IsNullOrWhiteSpace(cliente.ApellidoMaterno) && !soloLetras.IsMatch(cliente.ApellidoMaterno))
+                return BadRequest(new { mensaje = "El apellido materno solo puede contener letras y espacios." });
+
+            if (!string.IsNullOrWhiteSpace(cliente.Telefono) && !cliente.Telefono.All(char.IsDigit))
+                return BadRequest(new { mensaje = "El teléfono solo puede contener números." });
 
             if (cliente.AlergiaClientes != null && cliente.AlergiaClientes.Any())
             {

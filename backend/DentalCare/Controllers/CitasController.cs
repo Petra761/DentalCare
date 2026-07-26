@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -843,6 +844,9 @@ namespace DentalCare.Controllers
                 // Opción B: buscar o crear por teléfono/CI (AI Agent)
                 cliente = null;
 
+                if (!string.IsNullOrWhiteSpace(dto.ClienteTelefono) && !dto.ClienteTelefono.All(char.IsDigit))
+                    return BadRequest(new { success = false, mensaje = "El teléfono solo puede contener números." });
+
                 if (!string.IsNullOrWhiteSpace(dto.ClienteCi) && int.TryParse(dto.ClienteCi, out var ciBusqueda))
                 {
                     cliente = await _context.Cliente
@@ -895,6 +899,8 @@ namespace DentalCare.Controllers
                         return BadRequest(new { success = false, mensaje = "El nombre debe contener al menos una letra." });
                     if (nombreCompleto.GroupBy(c => c).Any(g => g.Count() > nombreCompleto.Length * 0.6))
                         return BadRequest(new { success = false, mensaje = "Nombre inválido (caracteres repetitivos)." });
+                    if (!Regex.IsMatch(nombreCompleto, @"^[a-zA-ZáéíóúüñÑÁÉÍÓÚÜ\s]+$"))
+                        return BadRequest(new { success = false, mensaje = "El nombre solo puede contener letras y espacios." });
 
                     if (string.IsNullOrWhiteSpace(dto.ClienteCi) || !int.TryParse(dto.ClienteCi, out var ciNuevo))
                         return BadRequest(new { success = false, mensaje = "El CI (cédula de identidad) es requerido para registrar un nuevo cliente." });
@@ -938,10 +944,31 @@ namespace DentalCare.Controllers
             }
             else if (!string.IsNullOrWhiteSpace(dto.Servicio))
             {
-                // Opción B: buscar por nombre (AI Agent)
-                servicio = await _context.Servicio
+                var todosServicios = await _context.Servicio
                     .Where(s => s.Estado == "Activo" && s.EstadoServicio == "Disponible")
-                    .FirstOrDefaultAsync(s => EF.Functions.Like(s.Nombre, $"%{dto.Servicio}%"));
+                    .ToListAsync();
+
+                var nombreBusqueda = dto.Servicio.Trim();
+
+                // 1. Coincidencia exacta (LIKE %nombre%)
+                servicio = todosServicios.FirstOrDefault(s =>
+                    s.Nombre.Contains(nombreBusqueda, StringComparison.OrdinalIgnoreCase));
+
+                // 2. Si no, buscar por palabra clave (ej: "Extracción Simple" → "Extracción Molar")
+                if (servicio == null)
+                {
+                    var palabras = nombreBusqueda.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Where(p => p.Length > 2).ToArray();
+                    servicio = todosServicios.FirstOrDefault(s =>
+                        palabras.Any(p => s.Nombre.Contains(p, StringComparison.OrdinalIgnoreCase)));
+                    // Si aún no encuentra, probar con la primera palabra
+                    if (servicio == null && palabras.Length > 1)
+                    {
+                        servicio = todosServicios.FirstOrDefault(s =>
+                            s.Nombre.Contains(palabras[0], StringComparison.OrdinalIgnoreCase));
+                    }
+                }
+
                 if (servicio == null)
                     return BadRequest(new { success = false, mensaje = $"No se encontró un servicio disponible con el nombre '{dto.Servicio}'." });
             }
@@ -1027,6 +1054,7 @@ namespace DentalCare.Controllers
             };
 
             _context.Cita.Add(cita);
+            await _context.SaveChangesAsync();
 
             var detalle = new DetalleCita
             {
