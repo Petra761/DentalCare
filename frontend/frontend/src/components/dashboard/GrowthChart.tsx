@@ -50,16 +50,44 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
 
       fecha.setDate(fecha.getDate() - i);
 
-      const fechaTexto = fecha.toISOString().split("T")[0];
+      const fechaTexto =
+        fecha.getFullYear() +
+        "-" +
+        String(fecha.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(fecha.getDate()).padStart(2, "0");
 
-      const cantidad = citas.filter((c) => c.fecha === fechaTexto).length;
+      const citasDia = citas.filter((c) => c.fecha === fechaTexto);
+
+      const completadas = citasDia.filter(
+        (c) => c.estadoCita.toUpperCase() === "COMPLETADA",
+      ).length;
+
+      const pendientes = citasDia.filter(
+        (c) => c.estadoCita.toUpperCase() === "PENDIENTE",
+      ).length;
+
+      const confirmadas = citasDia.filter(
+        (c) => c.estadoCita.toUpperCase() === "CONFIRMADA",
+      ).length;
 
       datos.push({
         label: fecha.toLocaleDateString("es-ES", {
           weekday: "short",
         }),
 
-        value: cantidad,
+        value: completadas,
+
+        completadas,
+        pendientes,
+        confirmadas,
+
+        fechaCompleta: fecha.toLocaleDateString("es-ES", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
       });
     }
 
@@ -82,16 +110,42 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
 
       fin.setDate(fin.getDate() + 6);
 
-      const cantidad = citas.filter((c) => {
-        const fechaCita = new Date(c.fecha);
+      const inicioTexto =
+        inicio.getFullYear() +
+        "-" +
+        String(inicio.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(inicio.getDate()).padStart(2, "0");
 
-        return fechaCita >= inicio && fechaCita <= fin;
-      }).length;
+      const finTexto =
+        fin.getFullYear() +
+        "-" +
+        String(fin.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(fin.getDate()).padStart(2, "0");
+
+      const citasSemana = citas.filter((c) => {
+        return c.fecha >= inicioTexto && c.fecha <= finTexto;
+      });
+
+      const completadas = citasSemana.filter(
+        (c) => c.estadoCita.toUpperCase() === "COMPLETADA",
+      ).length;
+
+      const pendientes = citasSemana.filter(
+        (c) => c.estadoCita.toUpperCase() === "PENDIENTE",
+      ).length;
+
+      const confirmadas = citasSemana.filter(
+        (c) => c.estadoCita.toUpperCase() === "CONFIRMADA",
+      ).length;
 
       datos.push({
         label: `Semana ${4 - i}`,
-
-        value: cantidad,
+        value: completadas,
+        completadas,
+        pendientes,
+        confirmadas,
       });
     }
 
@@ -114,18 +168,38 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
 
       const año = fecha.getFullYear();
 
-      const cantidad = citas.filter((c) => {
-        const fechaCita = new Date(c.fecha);
+      const citasMes = citas.filter((c) => {
+        const partes = c.fecha.split("-");
 
-        return fechaCita.getMonth() === mes && fechaCita.getFullYear() === año;
-      }).length;
+        const añoCita = Number(partes[0]);
+
+        const mesCita = Number(partes[1]) - 1;
+
+        return mesCita === mes && añoCita === año;
+      });
+
+      const completadas = citasMes.filter(
+        (c) => c.estadoCita.toUpperCase() === "COMPLETADA",
+      ).length;
+
+      const pendientes = citasMes.filter(
+        (c) => c.estadoCita.toUpperCase() === "PENDIENTE",
+      ).length;
+
+      const confirmadas = citasMes.filter(
+        (c) => c.estadoCita.toUpperCase() === "CONFIRMADA",
+      ).length;
 
       datos.push({
         label: fecha.toLocaleDateString("es-ES", {
           month: "short",
         }),
 
-        value: cantidad,
+        value: completadas,
+
+        completadas,
+        pendientes,
+        confirmadas,
       });
     }
 
@@ -142,17 +216,14 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
     switch (periodo) {
       case "diario":
         datos = obtenerDiario();
-
         break;
 
       case "semanal":
         datos = obtenerSemanal();
-
         break;
 
       case "mensual":
         datos = obtenerMensual();
-
         break;
     }
 
@@ -165,6 +236,13 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
 
           data: datos.map((d) => d.value),
 
+          citasDetalle: datos.map((d) => ({
+            completadas: d.completadas,
+            pendientes: d.pendientes,
+            confirmadas: d.confirmadas,
+            fechaCompleta: d.fechaCompleta,
+          })),
+
           borderColor: "#009688",
 
           backgroundColor: "#E0F2F1",
@@ -174,6 +252,7 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
           pointBorderColor: "#FFFFFF",
 
           pointRadius: 5,
+
           borderRadius: 8,
 
           borderWidth: 3,
@@ -186,14 +265,12 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
     };
   };
 
-  const options = {
+  const getOptions = () => ({
     scales: {
       y: {
         beginAtZero: true,
-
         ticks: {
           stepSize: 1,
-
           precision: 0,
         },
       },
@@ -203,8 +280,31 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
       legend: {
         display: false,
       },
+
+      tooltip: {
+        callbacks: {
+          title: (context: any) => {
+            const detalle =
+              context[0].dataset.citasDetalle[context[0].dataIndex];
+
+            return detalle.fechaCompleta
+              ? detalle.fechaCompleta
+              : context[0].label;
+          },
+
+          label: (context: any) => {
+            const detalle = context.dataset.citasDetalle[context.dataIndex];
+
+            return [
+              `Citas completadas: ${detalle.completadas}`,
+              `Citas pendientes: ${detalle.pendientes}`,
+              `Citas confirmadas: ${detalle.confirmadas}`,
+            ];
+          },
+        },
+      },
     },
-  };
+  });
 
   const getTotalPeriodo = () => {
     let datos: any[] = [];
@@ -232,7 +332,7 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
         <div>
           <h2>Crecimiento de citas</h2>
 
-          <p>Evolución de reservas realizadas</p>
+          <p>Evolución</p>
 
           <span className="growth-total">Total: {getTotalPeriodo()} citas</span>
         </div>
@@ -263,9 +363,9 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ citas }) => {
 
       <div className="chart-area">
         {periodo === "semanal" ? (
-          <Bar data={getDataChart()} options={options} />
+          <Bar data={getDataChart()} options={getOptions()} />
         ) : (
-          <Line data={getDataChart()} options={options} />
+          <Line data={getDataChart()} options={getOptions()} />
         )}
       </div>
     </div>

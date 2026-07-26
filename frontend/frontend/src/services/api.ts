@@ -568,22 +568,24 @@ export const apiService = {
       localStorage.setItem("dental_db_clientes", JSON.stringify(defaultMock));
       return defaultMock;
     }
-    const res = await fetch(`${BASE_URL}/Clientes?pagina=1&limite=1000`, { headers: getHeaders() });
-    if (!res.ok) throw new Error('Error al obtener clientes');
+    const res = await fetch(`${BASE_URL}/Clientes?pagina=1&limite=1000`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener clientes");
     const data = await res.json();
     // Backend devuelve { TotalPacientes, PaginaActual, PaginasTotales, Pacientes: [...] }
     // Mapear de PascalCase (backend) a camelCase (frontend)
     return (data.pacientes || data.Pacientes || []).map((p: any) => ({
       idCliente: p.idCliente || p.IdCliente,
       ci: p.ci || p.Ci,
-      nombre: p.nombre || p.Nombre || '',
-      apellidoPaterno: p.apellidoPaterno || p.ApellidoPaterno || '',
-      apellidoMaterno: p.apellidoMaterno || p.ApellidoMaterno || '',
-      nombreCompleto: p.nombreCompleto || p.NombreCompleto || '',
-      tipoSangre: p.tipoSangre || p.TipoSangre || 'No especificado',
-      telefono: p.telefono || p.Telefono || '',
-      fechaNacimiento: p.fechaNacimiento || p.FechaNacimiento || '2000-01-01',
-      estado: p.estado || p.Estado || 'Activo'
+      nombre: p.nombre || p.Nombre || "",
+      apellidoPaterno: p.apellidoPaterno || p.ApellidoPaterno || "",
+      apellidoMaterno: p.apellidoMaterno || p.ApellidoMaterno || "",
+      nombreCompleto: p.nombreCompleto || p.NombreCompleto || "",
+      tipoSangre: p.tipoSangre || p.TipoSangre || "No especificado",
+      telefono: p.telefono || p.Telefono || "",
+      fechaNacimiento: p.fechaNacimiento || p.FechaNacimiento || "2000-01-01",
+      estado: p.estado || p.Estado || "Activo",
     }));
   },
 
@@ -688,10 +690,29 @@ export const apiService = {
     return await res.json();
   },
 
+  async GetCitasDashboard(): Promise<DbCita[]> {
+    if (isMockMode) {
+      const stored = localStorage.getItem("dental_db_citas");
+      if (stored) return JSON.parse(stored);
+
+      return [];
+    }
+
+    const res = await fetch(`${BASE_URL}/Citas/dashboard`, {
+      headers: getHeaders(),
+    });
+
+    if (!res.ok) throw new Error("Error al obtener citas del dashboard");
+
+    return await res.json();
+  },
+
   async getHistorial(): Promise<DbCita[]> {
     if (isMockMode) return [];
-    const res = await fetch(`${BASE_URL}/Citas/historial`, { headers: getHeaders() });
-    if (!res.ok) throw new Error('Error al obtener historial');
+    const res = await fetch(`${BASE_URL}/Citas/historial`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener historial");
     return await res.json();
   },
 

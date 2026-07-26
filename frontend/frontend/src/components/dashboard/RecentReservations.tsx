@@ -91,14 +91,37 @@ export const RecentReservations: React.FC<RecentReservationsProps> = ({
     }
   };
 
+  const citasRecientes = [...citas]
+    .filter((cita) => {
+      const estado = cita.estadoCita.toUpperCase();
+
+      const esPendienteOConfirmada =
+        estado === "PENDIENTE" || estado === "CONFIRMADA";
+
+      const fechaCita = new Date(`${cita.fecha}T${cita.hora.substring(0, 8)}`);
+
+      const hoy = new Date();
+
+      hoy.setHours(0, 0, 0, 0);
+
+      return esPendienteOConfirmada && fechaCita >= hoy;
+    })
+    .sort((a, b) => {
+      const fechaHoraA = `${a.fecha} ${a.hora}`;
+      const fechaHoraB = `${b.fecha} ${b.hora}`;
+
+      return fechaHoraA.localeCompare(fechaHoraB);
+    })
+    .slice(0, 4);
+
   return (
     <div className="recent-reservations-container">
       <div className="reservations-header">
-        <h2>Reservas Recientes</h2>
+        <h2>Próximas Citas </h2>
       </div>
 
       <div className="reservations-list">
-        {citas.slice(0, 4).map((cita) => (
+        {citasRecientes.map((cita) => (
           <div key={cita.idCita} className="reservation-card">
             <div className="reservation-main">
               <div className="communication-icon">
@@ -115,8 +138,14 @@ export const RecentReservations: React.FC<RecentReservationsProps> = ({
             <div className="reservation-footer">
               <div className="reservation-hour">
                 <FaClock />
-
-                {cita.hora}
+                {new Date(`${cita.fecha}T${cita.hora}`).toLocaleDateString(
+                  "es-ES",
+                  {
+                    day: "numeric",
+                    month: "short",
+                  },
+                )}{" "}
+                - {cita.hora.substring(0, 5)}
               </div>
 
               {getStatus(cita.estadoCita)}

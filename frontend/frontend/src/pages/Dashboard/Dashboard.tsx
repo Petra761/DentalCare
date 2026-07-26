@@ -22,20 +22,20 @@ export const Dashboard: React.FC = () => {
 
   const cargarDatos = async () => {
     try {
-      const [citasDB, clientesResponse, serviciosDB] = await Promise.all([
-        apiService.getDbCitas(),
-        apiService.getClientesDashboard(),
+      const [citasDB, clientesDb, serviciosDB] = await Promise.all([
+        apiService.GetCitasDashboard(),
+        apiService.getClientes(),
         apiService.getServicios(),
       ]);
-      console.log("CLIENTES API:", clientesResponse.pacientes);
+      console.log("CLIENTES API:", clientesDb);
       console.log("CITAS API:", citasDB);
       setCitas(citasDB);
 
       // Guardar la lista de pacientes
-      setClientes(clientesResponse.pacientes);
+      setClientes(clientesDb);
 
       // Guardar el total de pacientes
-      setTotalPacientes(clientesResponse.totalPacientes);
+      setTotalPacientes(clientesDb.length);
       setServicios(serviciosDB);
     } catch (error) {
       console.error(error);
@@ -51,48 +51,68 @@ export const Dashboard: React.FC = () => {
   // MÉTRICAS DINÁMICAS
   // ==========================
 
-  const hoy = new Date().toISOString().split("T")[0];
+  const fechaActual = new Date();
+
+  const hoy =
+    fechaActual.getFullYear() +
+    "-" +
+    String(fechaActual.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(fechaActual.getDate()).padStart(2, "0");
 
   const citasHoy = citas.filter((c) => c.fecha === hoy);
 
+  // Cancelaciones generales
   const canceladas = citas.filter(
     (c) => c.estadoCita.toUpperCase() === "CANCELADA",
   );
 
-  const confirmadas = citas.filter(
-    (c) => c.estadoCita.toUpperCase() === "CONFIRMADA",
-  );
-
-  const efectividad =
-    citas.length === 0
-      ? 0
-      : Math.round((confirmadas.length / citas.length) * 100);
-
-  const tasaCancelacion =
-    citas.length === 0
-      ? 0
-      : Math.round((canceladas.length / citas.length) * 100);
-
-  // ==========================
-  // MÉTRICAS ASISTENTE VIRTUAL
-  // ==========================
-
+  // Citas realizadas por WhatsApp (Bot)
   const citasWhatsApp = citas.filter(
     (c) => c.medioComunicacion?.toLowerCase() === "whatsapp",
   );
 
-  // Citas creadas por el bot
-  const agendadasBot = citasWhatsApp.filter(
-    (c) => c.estadoCita.toUpperCase() !== "Cancelada",
+  // Confirmadas por Bot
+  const confirmadasBot = citasWhatsApp.filter(
+    (c) => c.estadoCita.toUpperCase() === "CONFIRMADA",
+  );
+
+  // Efectividad del Bot
+  const efectividadBot =
+    citasWhatsApp.length === 0
+      ? 0
+      : Math.round((confirmadasBot.length / citasWhatsApp.length) * 100);
+
+  // Tasa de cancelación general
+  const tasaCancelacion =
+    citas.length === 0
+      ? 0
+      : Math.round((canceladas.length / citas.length) * 100);
+  // ==========================
+  // MÉTRICAS ASISTENTE VIRTUAL
+  // ==========================
+
+  // Citas realizadas mediante WhatsApp (Bot)
+  const citasBot = citas.filter(
+    (c) => c.medioComunicacion?.toUpperCase() === "WHATSAPP",
+  );
+
+  // Agendadas por Bot
+  // (pendientes o confirmadas creadas por WhatsApp)
+  const agendadasBot = citasBot.filter((c) => {
+    const estado = c.estadoCita.toUpperCase();
+
+    return estado === "PENDIENTE" || estado === "CONFIRMADA";
+  }).length;
+
+  // Reagendadas por Bot
+  const reagendadasBot = citasBot.filter(
+    (c) => c.estadoCita.toUpperCase() === "REAGENDADO",
   ).length;
 
-  // Actualmente no existe historial de cambios,
-  // por eso queda preparado para futuras mejoras
-  const reagendadasBot = 0;
-
-  // Cancelaciones realizadas por WhatsApp
-  const canceladasBot = citasWhatsApp.filter(
-    (c) => c.estadoCita.toUpperCase() === "Cancelada",
+  // Canceladas por Bot
+  const canceladasBot = citasBot.filter(
+    (c) => c.estadoCita.toUpperCase() === "CANCELADA",
   ).length;
   return (
     <div className="dashboard">
@@ -128,7 +148,7 @@ export const Dashboard: React.FC = () => {
 
           <span className="card-title">EFECTIVIDAD BOT</span>
 
-          <h2>{efectividad}%</h2>
+          <h2>{efectividadBot}%</h2>
 
           <p>Citas confirmadas automáticamente</p>
         </div>
