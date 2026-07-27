@@ -437,7 +437,7 @@ namespace DentalCare.Controllers
 
         // ─── POST: api/Citas/nueva ─────────────────────────────────────────────
         [HttpPost("nueva")]
-        public async Task<ActionResult<Cita>> PostNuevaCita(NuevaCitaDto dto)
+        public async Task<ActionResult<Cita>> PostNuevaCita([FromBody] NuevaCitaDto dto)
         {
             // 1. Validate EstadoCita value
             var estadosValidos = new[] { "Pendiente", "Confirmada", "Cancelada", "Completada", "Reagendado" };
@@ -517,12 +517,11 @@ namespace DentalCare.Controllers
             // 12. Crear DetalleCita
             var detalle = new DetalleCita
             {
-                IdCita     = cita.IdCita,
                 IdServicio = dto.IdServicio
             };
 
+            cita.DetalleCitas.Add(detalle);
             _context.Cita.Add(cita);
-            _context.DetalleCita.Add(detalle);
             await _context.SaveChangesAsync();
 
             // 13. Sincronizar con Google Calendar
