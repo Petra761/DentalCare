@@ -151,10 +151,10 @@ export const Tratamientos: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
-            Tratamientos y Servicios
+            Servicios
           </h1>
           <p className="text-slate-500 mt-1">
-            Consulta los servicios odontológicos y tratamientos disponibles en el sistema.
+            Consulta los servicios odontológicos en el sistema.
           </p>
         </div>
       </div>
