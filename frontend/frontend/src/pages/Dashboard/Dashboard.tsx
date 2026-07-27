@@ -27,8 +27,6 @@ export const Dashboard: React.FC = () => {
         apiService.getClientes(),
         apiService.getServicios(),
       ]);
-      console.log("CLIENTES API:", clientesDb);
-      console.log("CITAS API:", citasDB);
       const detalles = await apiService.getDetallesCita();
 
       const citasConServicio = citasDB.map((cita) => {
