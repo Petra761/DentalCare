@@ -29,7 +29,22 @@ export const Dashboard: React.FC = () => {
       ]);
       console.log("CLIENTES API:", clientesDb);
       console.log("CITAS API:", citasDB);
-      setCitas(citasDB);
+      const detalles = await apiService.getDetallesCita();
+
+      const citasConServicio = citasDB.map((cita) => {
+        const detalle = detalles.find((d) => d.idCita === cita.idCita);
+
+        const servicio = serviciosDB.find(
+          (s) => s.idServicio === detalle?.idServicio,
+        );
+
+        return {
+          ...cita,
+          serviceName: servicio?.nombre,
+        };
+      });
+
+      setCitas(citasConServicio);
 
       // Guardar la lista de pacientes
       setClientes(clientesDb);

@@ -16,7 +16,7 @@ import {
 
 import { Line, Bar } from "react-chartjs-2";
 
-import "../../pages/dashboard/Dashboard.css";
+import "../../pages/Dashboard/Dashboard.css";
 
 ChartJS.register(
   CategoryScale,

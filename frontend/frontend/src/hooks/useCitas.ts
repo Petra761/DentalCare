@@ -9,9 +9,10 @@ export const useCitas = (selectedDate: string) => {
   const fetchTodo = async () => {
     try {
       setLoading(true);
-      const [citasData, serviciosData] = await Promise.all([
+      const [citasData, serviciosData, detallesData] = await Promise.all([
         citasService.getCitas(),
         citasService.getServicios(),
+        citasService.getAllDetalles(),
       ]);
 
       const idClientesUnicos = Array.from(
@@ -26,26 +27,35 @@ export const useCitas = (selectedDate: string) => {
         serviciosData.map((s: any) => [s.idServicio, s]),
       );
 
+      const detalleMap = new Map(
+        detallesData.map((d: any) => [d.idCita, d.idServicio]),
+      );
+
       const enriquecidas = citasData.map((cita: any) => {
         const cliente = clienteMap.get(cita.idCliente);
-        const idServicio = cita.detalleCitas[0]?.idServicio;
-        const servicio = servicioMap.get(idServicio);
+
+        const idServicioAsignado = detalleMap.get(cita.idCita);
+        const servicio = idServicioAsignado
+          ? servicioMap.get(idServicioAsignado)
+          : null;
 
         return {
           ...cita,
           nombrePaciente: cliente
             ? `${cliente.nombre} ${cliente.apellidoPaterno}`
-            : `Cliente ${cita.idCliente}`,
+            : `ID: ${cita.idCliente}`,
           nombreServicio: servicio
             ? servicio.nombre
-            : "Servicio no especificado",
+            : "Tratamiento no asignado",
+          idServicio: idServicioAsignado || null,
+          codigoServicio: servicio ? servicio.codigo : "N/A",
         };
       });
 
       setCitas(enriquecidas);
       setServicios(serviciosData);
     } catch (error) {
-      console.error("Error al cargar agenda:", error);
+      console.error("Error al enriquecer datos de agenda:", error);
     } finally {
       setLoading(false);
     }
@@ -54,11 +64,6 @@ export const useCitas = (selectedDate: string) => {
   useEffect(() => {
     fetchTodo();
   }, []);
-
-  const citasDelDia = useMemo(
-    () => citas.filter((c) => c.fecha && c.fecha.startsWith(selectedDate)),
-    [citas, selectedDate],
-  );
 
   const stats = useMemo(() => {
     const totales = citas.length;
@@ -71,5 +76,5 @@ export const useCitas = (selectedDate: string) => {
     };
   }, [citas]);
 
-  return { citas, citasDelDia, servicios, stats, loading, refresh: fetchTodo };
+  return { citas, servicios, stats, loading, refresh: fetchTodo };
 };
