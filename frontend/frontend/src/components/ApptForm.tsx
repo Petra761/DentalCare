@@ -42,7 +42,6 @@ const errSt: React.CSSProperties = {
 };
 
 const ESTADOS = ['Pendiente','Confirmada','Cancelada','Completada'];
-const MEDIOS  = ['Recepción','Teléfono'];
 
 const getSlots = (service: Servicio | null) => {
   let durMin = 30;
@@ -97,8 +96,8 @@ export const ApptForm: React.FC<ApptFormProps> = ({
   const [selectedService, setSelectedService] = useState<Servicio|null>(initial?.service ?? null);
   const [fecha,           setFecha]           = useState(initial?.fecha ?? new Date().toISOString().split('T')[0]);
   const [hora,            setHora]            = useState(initial?.hora ? initial.hora.slice(0,5) : '');
-  const [medio,           setMedio]           = useState(initial?.medio ?? 'WhatsApp');
   const [estado,          setEstado]          = useState(initial?.estado ?? 'Pendiente');
+  const medio = initial?.medio ?? 'Recepción';
   const [fechaErr,        setFechaErr]        = useState('');
   const [saving,          setSaving]          = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -143,7 +142,7 @@ export const ApptForm: React.FC<ApptFormProps> = ({
   };
 
   const slots = getSlots(selectedService);
-  const valid = selectedClient && selectedService && fecha && !fechaErr && hora && medio && estado;
+  const valid = selectedClient && selectedService && fecha && !fechaErr && hora && estado;
 
   const handleSubmit = async (e:React.FormEvent) => {
     e.preventDefault();
@@ -286,14 +285,6 @@ export const ApptForm: React.FC<ApptFormProps> = ({
             <span style={errSt}>Sin horarios disponibles para esta duración.</span>
           )}
         </div>
-      </div>
-
-      {/* Communication medium */}
-      <div>
-        <Lbl>Medio de Comunicación</Lbl>
-        <select value={medio} onChange={e=>setMedio(e.target.value)} required style={inputSt}>
-          {MEDIOS.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
       </div>
 
       {/* Status */}
