@@ -42,7 +42,7 @@ const errSt: React.CSSProperties = {
 };
 
 const ESTADOS = ['Pendiente','Confirmada','Cancelada','Completada'];
-const MEDIOS  = ['WhatsApp','Recepción','Teléfono'];
+const MEDIOS  = ['Recepción','Teléfono'];
 
 const getSlots = (service: Servicio | null) => {
   let durMin = 30;
@@ -211,7 +211,7 @@ export const ApptForm: React.FC<ApptFormProps> = ({
 
       {/* Service */}
       <div>
-        <Lbl>Seleccionar Tratamiento</Lbl>
+        <Lbl>Seleccionar Servicio</Lbl>
         <select value={selectedService?.idServicio ?? ''} onChange={handleSvc} required style={inputSt}>
           <option value="" disabled>Elegir especialidad...</option>
           {(() => {

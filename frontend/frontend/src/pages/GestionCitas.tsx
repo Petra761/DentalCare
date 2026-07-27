@@ -659,7 +659,7 @@ export const GestionCitas: React.FC = () => {
             <table className="fc-table" style={{width:'100%', borderCollapse:'collapse', textAlign:'left'}}>
               <thead>
                 <tr>
-                  {['Cliente','Fecha & Hora','Tratamiento','Estado','Acciones'].map((h,i) => (
+                  {['Cliente','Fecha & Hora','Servicio','Estado','Acciones'].map((h,i) => (
                     <th key={h} className="fc-th" style={{
                       backgroundColor:'#F8FAFC', padding:'16px 24px',
                       fontSize:11, fontWeight:600, textTransform:'uppercase',
