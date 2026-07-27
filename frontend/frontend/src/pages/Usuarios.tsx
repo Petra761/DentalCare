@@ -6,8 +6,10 @@ import { UserStats } from '../components/UserStats';
 import { UserForm } from '../components/UserForm';
 import { Modal } from '../components/Modal';
 import { Search, SlidersHorizontal, Download, UserPlus, AlertCircle, RefreshCw } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
 
 export const Usuarios: React.FC = () => {
+  const { showSuccess, showError } = useNotification();
   
   // Data States
   const [users, setUsers] = useState<Usuario[]>([]);
@@ -85,15 +87,18 @@ export const Usuarios: React.FC = () => {
       if (editingUser && editingUser.id) {
         // Edit Mode
         await apiService.updateUsuario(editingUser.id, userData);
+        showSuccess("Datos actualizados correctamente.");
       } else {
         // Create Mode
         await apiService.createUsuario(userData);
+        showSuccess("Datos actualizados correctamente.");
       }
       setShowForm(false);
       setEditingUser(null);
       await loadUsers();
     } catch (err: any) {
       console.error(err);
+      showError("Error al guardar la información.");
       throw err;
     }
   };

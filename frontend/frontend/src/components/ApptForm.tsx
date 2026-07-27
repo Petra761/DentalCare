@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Cliente, Servicio, Categoria } from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 const C = {
   primary:     '#009688',
@@ -87,6 +88,7 @@ interface ApptFormProps {
 export const ApptForm: React.FC<ApptFormProps> = ({
   clientes, categorias, servicios, initial, onCancel, onSubmit, submitLabel, showEstado,
 }) => {
+  const { showError } = useNotification();
   const [search,        setSearch]        = useState(initial?.client
     ? `${initial.client.nombre} ${initial.client.apellidoPaterno} ${initial.client.apellidoMaterno} (CI: ${initial.client.ci})`
     : '');
@@ -151,7 +153,7 @@ export const ApptForm: React.FC<ApptFormProps> = ({
     try {
       await onSubmit({ client:selectedClient!, service:selectedService!, fecha, hora, medio, estado });
     } catch(err:any){
-      alert(err.message || 'Error al guardar.');
+      showError("Error al guardar la información.");
     } finally {
       setSaving(false);
     }

@@ -6,6 +6,7 @@ import {
   type Alergia,
 } from "../../services/FichaCliente/pacienteServices";
 import { Save, X, User, Heart, ChevronDown, Loader2 } from "lucide-react";
+import { useNotification } from "../../context/NotificationContext";
 
 interface Props {
   idCliente: number;
@@ -18,6 +19,7 @@ export const EditarPacienteModal: React.FC<Props> = ({
   onCancelar,
   onSuccess,
 }) => {
+  const { showSuccess, showError } = useNotification();
   const [formData, setFormData] = useState({
     ci: "",
     nombre: "",
@@ -111,8 +113,10 @@ export const EditarPacienteModal: React.FC<Props> = ({
         })),
       };
       await actualizarCliente(idCliente, payload);
+      showSuccess("Datos actualizados correctamente.");
       onSuccess();
     } catch (error: any) {
+      showError("Error al guardar la información.");
       setErrorMsg(error.message || "Error al actualizar el registro.");
     } finally {
       setLoadingGuardar(false);

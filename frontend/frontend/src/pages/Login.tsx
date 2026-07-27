@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Stethoscope, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
 
 export const Login: React.FC = () => {
   const { login, isMockMode } = useAuth();
+  const { showError } = useNotification();
   const [nombreUsuario, setNombreUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +31,9 @@ export const Login: React.FC = () => {
       }
       navigate('/gestion-citas');
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.');
+      const msg = err.message || 'Usuario o contraseña incorrectos.';
+      setError(msg);
+      showError(msg);
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { apiService } from '../services/api';
 import type { Cliente, Servicio, Categoria, DbCita, NuevaCitaDto } from '../services/api';
 import { Modal } from '../components/Modal';
 import { ApptForm } from '../components/ApptForm';
+import { useNotification } from '../context/NotificationContext';
 
 const C = {
   primary:     '#009688',
@@ -103,6 +104,7 @@ type Tab = 'agenda' | 'historial';
 export const GestionCitas: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { showSuccess } = useNotification();
 
   useEffect(() => { if(!isAuthenticated) navigate('/'); }, [isAuthenticated, navigate]);
 
@@ -226,6 +228,7 @@ export const GestionCitas: React.FC = () => {
       estadoCita:        data.estado,
     };
     await apiService.crearNuevaCita(dto);
+    showSuccess("Cita programada con éxito.");
     setShowNew(false);
     await loadCitas(clients, services);
   };
@@ -326,6 +329,7 @@ export const GestionCitas: React.FC = () => {
       }
     }
 
+    showSuccess("Datos actualizados correctamente.");
     setEditCita(null);
     await loadCitas(clients, services);
   };
