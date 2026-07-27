@@ -30,9 +30,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Agenda', path: '/gestion-citas', icon: Calendar },
+    { name: 'Agenda', path: '/agenda', icon: Calendar },
     { name: 'Pacientes', path: '/pacientes', icon: Users },
-    { name: 'Tratamientos', path: '/tratamientos', icon: Activity },
+    { name: 'Servicios', path: '/tratamientos', icon: Activity },
     { name: 'Reportes', path: '/reportes', icon: BarChart3 },
     { name: 'Usuarios', path: '/usuarios', icon: User },
   ];

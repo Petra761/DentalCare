@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Cliente, Servicio, Categoria } from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 const C = {
   primary:     '#009688',
@@ -42,7 +43,6 @@ const errSt: React.CSSProperties = {
 };
 
 const ESTADOS = ['Pendiente','Confirmada','Cancelada','Completada'];
-const MEDIOS  = ['WhatsApp','Recepción','Teléfono'];
 
 const getSlots = (service: Servicio | null) => {
   let durMin = 30;
@@ -88,6 +88,7 @@ interface ApptFormProps {
 export const ApptForm: React.FC<ApptFormProps> = ({
   clientes, categorias, servicios, initial, onCancel, onSubmit, submitLabel, showEstado,
 }) => {
+  const { showError } = useNotification();
   const [search,        setSearch]        = useState(initial?.client
     ? `${initial.client.nombre} ${initial.client.apellidoPaterno} ${initial.client.apellidoMaterno} (CI: ${initial.client.ci})`
     : '');
@@ -97,8 +98,8 @@ export const ApptForm: React.FC<ApptFormProps> = ({
   const [selectedService, setSelectedService] = useState<Servicio|null>(initial?.service ?? null);
   const [fecha,           setFecha]           = useState(initial?.fecha ?? new Date().toISOString().split('T')[0]);
   const [hora,            setHora]            = useState(initial?.hora ? initial.hora.slice(0,5) : '');
-  const [medio,           setMedio]           = useState(initial?.medio ?? 'WhatsApp');
   const [estado,          setEstado]          = useState(initial?.estado ?? 'Pendiente');
+  const medio = initial?.medio ?? 'Recepción';
   const [fechaErr,        setFechaErr]        = useState('');
   const [saving,          setSaving]          = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -143,7 +144,7 @@ export const ApptForm: React.FC<ApptFormProps> = ({
   };
 
   const slots = getSlots(selectedService);
-  const valid = selectedClient && selectedService && fecha && !fechaErr && hora && medio && estado;
+  const valid = selectedClient && selectedService && fecha && !fechaErr && hora && estado;
 
   const handleSubmit = async (e:React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +153,7 @@ export const ApptForm: React.FC<ApptFormProps> = ({
     try {
       await onSubmit({ client:selectedClient!, service:selectedService!, fecha, hora, medio, estado });
     } catch(err:any){
-      alert(err.message || 'Error al guardar.');
+      showError("Error al guardar la información.");
     } finally {
       setSaving(false);
     }
@@ -211,7 +212,7 @@ export const ApptForm: React.FC<ApptFormProps> = ({
 
       {/* Service */}
       <div>
-        <Lbl>Seleccionar Tratamiento</Lbl>
+        <Lbl>Seleccionar Servicio</Lbl>
         <select value={selectedService?.idServicio ?? ''} onChange={handleSvc} required style={inputSt}>
           <option value="" disabled>Elegir especialidad...</option>
           {(() => {
@@ -286,14 +287,6 @@ export const ApptForm: React.FC<ApptFormProps> = ({
             <span style={errSt}>Sin horarios disponibles para esta duración.</span>
           )}
         </div>
-      </div>
-
-      {/* Communication medium */}
-      <div>
-        <Lbl>Medio de Comunicación</Lbl>
-        <select value={medio} onChange={e=>setMedio(e.target.value)} required style={inputSt}>
-          {MEDIOS.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
       </div>
 
       {/* Status */}

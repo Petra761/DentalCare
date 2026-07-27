@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import { Layout } from "./layouts/Layout";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -16,7 +17,8 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <NotificationProvider>
+          <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Layout><Login /></Layout>} />
           <Route path="/register" element={<Layout><Register /></Layout>} />
@@ -40,7 +42,8 @@ function App() {
           <Route path="/tratamientos" element={<Layout><Tratamientos /></Layout>} />
           <Route path="/reportes" element={<Layout><Reportes /></Layout>} />
           <Route path="/usuarios" element={<Layout><Usuarios /></Layout>} />
-        </Routes>
+          </Routes>
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );

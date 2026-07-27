@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -38,8 +39,20 @@ namespace DentalCare.Controllers
                 .ToListAsync();
         }
 
-        // ─── GET: api/Citas/historial ─────────────────────────────────────────
-[HttpGet("historial")]
+
+        // ─── GET: api/Citas/dashboard ─────────────────────────────────────────
+        [HttpGet("dashboard")]
+        public async Task<ActionResult<IEnumerable<Cita>>> GetCitasDashboard()
+        {
+            return await _context.Cita
+                .Where(c => c.Estado == "Activo")
+                .OrderByDescending(c => c.Fecha)
+                .ThenByDescending(c => c.Hora)
+                .ToListAsync();
+        }
+
+        // ─── GET: api/Citas/historial ─────────────────────────────────────────   
+        [HttpGet("historial")]
         public async Task<ActionResult<IEnumerable<Cita>>> GetHistorial()
         {
             return await _context.Cita
@@ -298,6 +311,18 @@ namespace DentalCare.Controllers
             if (!estadosValidos.Contains(dto.EstadoCita))
                 return BadRequest(new { mensaje = "Estado no válido. Opciones: Pendiente, Confirmada, Cancelada, Completada, Reagendado." });
 
+            var transicionesValidas = new Dictionary<string, string[]>
+            {
+                ["Pendiente"]  = new[] { "Confirmada", "Cancelada" },
+                ["Confirmada"] = new[] { "Completada", "Cancelada", "Reagendado" },
+                ["Cancelada"]  = Array.Empty<string>(),
+                ["Completada"] = Array.Empty<string>(),
+                ["Reagendado"] = Array.Empty<string>(),
+            };
+
+            if (!transicionesValidas.TryGetValue(cita.EstadoCita, out var permitidos) || !permitidos.Contains(dto.EstadoCita))
+                return BadRequest(new { mensaje = $"No se puede cambiar de '{cita.EstadoCita}' a '{dto.EstadoCita}'. Transición no permitida." });
+
             cita.EstadoCita = dto.EstadoCita;
             await _context.SaveChangesAsync();
 
@@ -380,9 +405,21 @@ namespace DentalCare.Controllers
             var results = await query.ToListAsync();
 
             return results
+                .GroupBy(x => x.c.IdCita)
+                .Select(g =>
+                {
+                    var first = g.First();
+                    var maxDuracion = g.Max(x => x.s.Duracion);
+                    return new
+                    {
+                        first.c,
+                        duracion = maxDuracion,
+                        servicioNombre = string.Join(", ", g.Select(x => x.s.Nombre).Distinct())
+                    };
+                })
                 .Where(x =>
                 {
-                    var existingEnd = x.c.Hora.Add(x.s.Duracion.ToTimeSpan());
+                    var existingEnd = x.c.Hora.Add(x.duracion.ToTimeSpan());
                     return newStart < existingEnd && x.c.Hora < newEnd;
                 })
                 .Select(x => new ConflictoInfo
@@ -392,15 +429,15 @@ namespace DentalCare.Controllers
                     IdCliente      = x.c.IdCliente,
                     IdUsuario      = x.c.IdUsuario,
                     HoraInicio     = x.c.Hora,
-                    HoraFin        = x.c.Hora.Add(x.s.Duracion.ToTimeSpan()),
-                    ServicioNombre = x.s.Nombre,
+                    HoraFin        = x.c.Hora.Add(x.duracion.ToTimeSpan()),
+                    ServicioNombre = x.servicioNombre,
                 })
                 .ToList();
         }
 
         // ─── POST: api/Citas/nueva ─────────────────────────────────────────────
         [HttpPost("nueva")]
-        public async Task<ActionResult<Cita>> PostNuevaCita(NuevaCitaDto dto)
+        public async Task<ActionResult<Cita>> PostNuevaCita([FromBody] NuevaCitaDto dto)
         {
             // 1. Validate EstadoCita value
             var estadosValidos = new[] { "Pendiente", "Confirmada", "Cancelada", "Completada", "Reagendado" };
@@ -477,17 +514,14 @@ namespace DentalCare.Controllers
                 Estado            = "Activo"
             };
 
-            _context.Cita.Add(cita);
-            await _context.SaveChangesAsync();
-
             // 12. Crear DetalleCita
             var detalle = new DetalleCita
             {
-                IdCita     = cita.IdCita,
                 IdServicio = dto.IdServicio
             };
 
-            _context.DetalleCita.Add(detalle);
+            cita.DetalleCitas.Add(detalle);
+            _context.Cita.Add(cita);
             await _context.SaveChangesAsync();
 
             // 13. Sincronizar con Google Calendar
@@ -533,9 +567,13 @@ namespace DentalCare.Controllers
             var workEnd = new TimeOnly(18, 0);
 
             // Obtener la duración mínima entre todos los servicios activos
-            var duracionMin = await _context.Servicio
+            var serviciosActivos = await _context.Servicio
                 .Where(s => s.Estado == "Activo" && s.EstadoServicio == "Disponible")
-                .MinAsync(s => s.Duracion);
+                .ToListAsync();
+            if (serviciosActivos.Count == 0)
+                return Ok(new { success = true, fecha = fechaStr, fechaDia = fechaParsed.DayOfWeek.ToString(), slotsLibres = new List<string>(), horarioLaboral = new { inicio = "08:00", fin = "18:00" }, mensaje = "No hay servicios disponibles para calcular disponibilidad." });
+
+            var duracionMin = serviciosActivos.Min(s => s.Duracion);
             var intervaloSlots = duracionMin.ToTimeSpan();
 
             // 1. Obtener eventos de Google Calendar para esa fecha
@@ -640,6 +678,9 @@ namespace DentalCare.Controllers
             if (!TimeOnly.TryParse(dto.NuevaHora, out var horaNueva))
                 return BadRequest(new { success = false, mensaje = $"NuevaHora inválida: '{dto.NuevaHora}'." });
 
+            if (horaNueva.Minute != 0 && horaNueva.Minute != 30)
+                return BadRequest(new { success = false, mensaje = "La hora debe ser en intervalos de 30 minutos (ej. 08:00, 08:30, 09:00)." });
+
             // Buscar cliente
             var cliente = await _context.Cliente
                 .FirstOrDefaultAsync(c => c.Telefono == dto.ClienteTelefono && c.Estado == "Activo");
@@ -669,17 +710,23 @@ namespace DentalCare.Controllers
                 catch (Exception ex) { Console.Error.WriteLine($"Error al eliminar evento Calendar: {ex.Message}"); }
                 citaVieja.GoogleEventId = null;
             }
-            await _context.SaveChangesAsync();
 
             // Crear nueva cita (reusa lógica de agendar-desde-n8n)
-            var servicio = !string.IsNullOrWhiteSpace(dto.Servicio)
-                ? await _context.Servicio
+            Servicio? servicio;
+            if (!string.IsNullOrWhiteSpace(dto.Servicio))
+            {
+                servicio = await _context.Servicio
                     .Where(s => s.Estado == "Activo" && s.EstadoServicio == "Disponible")
-                    .FirstOrDefaultAsync(s => EF.Functions.Like(s.Nombre, $"%{dto.Servicio}%"))
-                : null;
-            servicio ??= await _context.Servicio.FirstOrDefaultAsync(s => s.Estado == "Activo" && s.EstadoServicio == "Disponible");
-            if (servicio == null)
-                return BadRequest(new { success = false, mensaje = "No hay servicios disponibles." });
+                    .FirstOrDefaultAsync(s => EF.Functions.Like(s.Nombre, $"%{dto.Servicio}%"));
+                if (servicio == null)
+                    return BadRequest(new { success = false, mensaje = $"No se encontró un servicio disponible con el nombre '{dto.Servicio}'." });
+            }
+            else
+            {
+                servicio = await _context.Servicio.FirstOrDefaultAsync(s => s.Estado == "Activo" && s.EstadoServicio == "Disponible");
+                if (servicio == null)
+                    return BadRequest(new { success = false, mensaje = "No hay servicios disponibles." });
+            }
 
             var endTime = horaNueva.Add(servicio.Duracion.ToTimeSpan());
             if (horaNueva < new TimeOnly(8, 0) || endTime > new TimeOnly(18, 0))
@@ -689,8 +736,8 @@ namespace DentalCare.Controllers
             var conflictos = await GetConflictosHorario(fechaNueva, horaNueva, endTime);
             if (conflictos.Any(c => c.IdCliente == cliente.IdCliente))
                 return Conflict(new { success = false, mensaje = "El paciente ya tiene otra cita en ese nuevo horario." });
-            if (conflictos.Any())
-                return Conflict(new { success = false, mensaje = "El nuevo horario solicitado ya está ocupado." });
+            if (conflictos.Any(c => c.IdUsuario == citaVieja.IdUsuario))
+                return Conflict(new { success = false, mensaje = "El odontólogo ya tiene una cita en ese horario." });
 
             // Crear código
             string codigoNuevo;
@@ -700,7 +747,7 @@ namespace DentalCare.Controllers
             var citaNueva = new Cita
             {
                 IdCliente = cliente.IdCliente,
-                IdUsuario = 1,
+                IdUsuario = citaVieja.IdUsuario,
                 Codigo = codigoNuevo,
                 MedioComunicacion = dto.MedioComunicacion ?? "WhatsApp",
                 Fecha = fechaNueva,
@@ -709,8 +756,6 @@ namespace DentalCare.Controllers
                 Estado = "Activo"
             };
             _context.Cita.Add(citaNueva);
-            await _context.SaveChangesAsync();
-
             _context.DetalleCita.Add(new DetalleCita { IdCita = citaNueva.IdCita, IdServicio = servicio.IdServicio });
             await _context.SaveChangesAsync();
 
@@ -762,6 +807,9 @@ namespace DentalCare.Controllers
             // Reagendado (opcional — si se envía, marca la cita anterior como Reagendado)
             public string? FechaActual { get; set; }
             public string? HoraActual { get; set; }
+
+            // Datos del cliente (cuando se crea uno nuevo)
+            public string? ClienteFechaNacimiento { get; set; }
         }
 
         // ─── POST: api/Citas/agendar-desde-n8n ───────────────────────────────
@@ -806,6 +854,9 @@ namespace DentalCare.Controllers
             {
                 // Opción B: buscar o crear por teléfono/CI (AI Agent)
                 cliente = null;
+
+                if (!string.IsNullOrWhiteSpace(dto.ClienteTelefono) && !dto.ClienteTelefono.All(char.IsDigit))
+                    return BadRequest(new { success = false, mensaje = "El teléfono solo puede contener números." });
 
                 if (!string.IsNullOrWhiteSpace(dto.ClienteCi) && int.TryParse(dto.ClienteCi, out var ciBusqueda))
                 {
@@ -859,9 +910,18 @@ namespace DentalCare.Controllers
                         return BadRequest(new { success = false, mensaje = "El nombre debe contener al menos una letra." });
                     if (nombreCompleto.GroupBy(c => c).Any(g => g.Count() > nombreCompleto.Length * 0.6))
                         return BadRequest(new { success = false, mensaje = "Nombre inválido (caracteres repetitivos)." });
+                    if (!Regex.IsMatch(nombreCompleto, @"^[a-zA-ZáéíóúüñÑÁÉÍÓÚÜ\s]+$"))
+                        return BadRequest(new { success = false, mensaje = "El nombre solo puede contener letras y espacios." });
 
                     if (string.IsNullOrWhiteSpace(dto.ClienteCi) || !int.TryParse(dto.ClienteCi, out var ciNuevo))
                         return BadRequest(new { success = false, mensaje = "El CI (cédula de identidad) es requerido para registrar un nuevo cliente." });
+
+                    DateOnly? fechaNac = null;
+                    if (!string.IsNullOrWhiteSpace(dto.ClienteFechaNacimiento) &&
+                        DateOnly.TryParse(dto.ClienteFechaNacimiento, out var fn))
+                    {
+                        fechaNac = fn;
+                    }
 
                     cliente = new Cliente
                     {
@@ -871,7 +931,7 @@ namespace DentalCare.Controllers
                         ApellidoMaterno = "",
                         Telefono = dto.ClienteTelefono ?? "",
                         TipoSangre = "No especificado",
-                        FechaNacimiento = new DateOnly(2000, 1, 1),
+                        FechaNacimiento = fechaNac,
                         Estado = "Activo"
                     };
                     _context.Cliente.Add(cliente);
@@ -895,14 +955,33 @@ namespace DentalCare.Controllers
             }
             else if (!string.IsNullOrWhiteSpace(dto.Servicio))
             {
-                // Opción B: buscar por nombre (AI Agent)
-                servicio = await _context.Servicio
+                var todosServicios = await _context.Servicio
                     .Where(s => s.Estado == "Activo" && s.EstadoServicio == "Disponible")
-                    .FirstOrDefaultAsync(s => EF.Functions.Like(s.Nombre, $"%{dto.Servicio}%"));
+                    .ToListAsync();
+
+                var nombreBusqueda = dto.Servicio.Trim();
+
+                // 1. Coincidencia exacta (LIKE %nombre%)
+                servicio = todosServicios.FirstOrDefault(s =>
+                    s.Nombre.Contains(nombreBusqueda, StringComparison.OrdinalIgnoreCase));
+
+                // 2. Si no, buscar por palabra clave (ej: "Extracción Simple" → "Extracción Molar")
                 if (servicio == null)
-                    servicio = await _context.Servicio.FirstOrDefaultAsync(s => s.Estado == "Activo" && s.EstadoServicio == "Disponible");
+                {
+                    var palabras = nombreBusqueda.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Where(p => p.Length > 2).ToArray();
+                    servicio = todosServicios.FirstOrDefault(s =>
+                        palabras.Any(p => s.Nombre.Contains(p, StringComparison.OrdinalIgnoreCase)));
+                    // Si aún no encuentra, probar con la primera palabra
+                    if (servicio == null && palabras.Length > 1)
+                    {
+                        servicio = todosServicios.FirstOrDefault(s =>
+                            s.Nombre.Contains(palabras[0], StringComparison.OrdinalIgnoreCase));
+                    }
+                }
+
                 if (servicio == null)
-                    return BadRequest(new { success = false, mensaje = "No hay servicios disponibles." });
+                    return BadRequest(new { success = false, mensaje = $"No se encontró un servicio disponible con el nombre '{dto.Servicio}'." });
             }
             else
             {
@@ -1025,6 +1104,16 @@ namespace DentalCare.Controllers
         [HttpPost]
         public async Task<ActionResult<Cita>> PostCita(Cita cita)
         {
+            if (cita.IdCliente <= 0 || cita.IdUsuario <= 0)
+                return BadRequest(new { mensaje = "IdCliente e IdUsuario son requeridos." });
+            if (string.IsNullOrWhiteSpace(cita.Codigo))
+                return BadRequest(new { mensaje = "El código de la cita es requerido." });
+
+            var cliente = await _context.Cliente.FindAsync(cita.IdCliente);
+            if (cliente == null || cliente.Estado != "Activo")
+                return NotFound(new { mensaje = "Cliente no encontrado o inactivo." });
+
+            cita.Estado = "Activo";
             _context.Cita.Add(cita);
             await _context.SaveChangesAsync();
             return CreatedAtAction("GetCita", new { id = cita.IdCita }, cita);
@@ -1063,6 +1152,7 @@ namespace DentalCare.Controllers
             public string? ClienteNombre { get; set; }
             public string? ClienteTelefono { get; set; }
             public string? ClienteCi { get; set; }
+            public string? CodigoCita { get; set; }
         }
 
         // ─── POST: api/Citas/cancelar-desde-n8n ──────────────────────────────────
@@ -1080,18 +1170,37 @@ namespace DentalCare.Controllers
             if (cliente == null)
                 return NotFound(new { success = false, mensaje = "Cliente no encontrado con esos datos." });
 
-            var cita = await _context.Cita
-                .Where(c => c.IdCliente == cliente.IdCliente
-                         && c.Estado == "Activo"
-                         && c.EstadoCita != "Cancelada"
-                         && c.EstadoCita != "Reagendado"
-                         && c.EstadoCita != "Completada")
-                .OrderByDescending(c => c.Fecha)
-                .ThenByDescending(c => c.Hora)
-                .FirstOrDefaultAsync();
+            Cita? cita;
 
-            if (cita == null)
-                return NotFound(new { success = false, mensaje = "No se encontró una cita activa para cancelar." });
+            if (!string.IsNullOrWhiteSpace(dto.CodigoCita))
+            {
+                cita = await _context.Cita
+                    .Where(c => c.IdCliente == cliente.IdCliente
+                             && c.Codigo == dto.CodigoCita
+                             && c.Estado == "Activo"
+                             && c.EstadoCita != "Cancelada"
+                             && c.EstadoCita != "Reagendado"
+                             && c.EstadoCita != "Completada")
+                    .FirstOrDefaultAsync();
+
+                if (cita == null)
+                    return NotFound(new { success = false, mensaje = $"No se encontró una cita activa con código '{dto.CodigoCita}' para este cliente." });
+            }
+            else
+            {
+                cita = await _context.Cita
+                    .Where(c => c.IdCliente == cliente.IdCliente
+                             && c.Estado == "Activo"
+                             && c.EstadoCita != "Cancelada"
+                             && c.EstadoCita != "Reagendado"
+                             && c.EstadoCita != "Completada")
+                    .OrderByDescending(c => c.Fecha)
+                    .ThenByDescending(c => c.Hora)
+                    .FirstOrDefaultAsync();
+
+                if (cita == null)
+                    return NotFound(new { success = false, mensaje = "No se encontró una cita activa para cancelar." });
+            }
 
             cita.EstadoCita = "Cancelada";
 

@@ -5,6 +5,7 @@ import {
   type Alergia,
 } from "../../services/FichaCliente/pacienteServices";
 import { Save, X, User, Heart, ChevronDown } from "lucide-react";
+import { useNotification } from "../../context/NotificationContext";
 
 interface Props {
   onCancelar: () => void;
@@ -15,6 +16,8 @@ export const RegistrarPacienteForm: React.FC<Props> = ({
   onCancelar,
   onSuccess,
 }) => {
+  const { showSuccess, showError } = useNotification();
+
   // Estados de datos
   const [formData, setFormData] = useState({
     ci: "",
@@ -69,9 +72,11 @@ export const RegistrarPacienteForm: React.FC<Props> = ({
       };
 
       await crearCliente(payload);
+      showSuccess("Paciente registrado correctamente.");
+      showSuccess("Ficha clínica registrada correctamente.");
       onSuccess();
     } catch (error) {
-      alert("Error al guardar el registro");
+      showError("Error al guardar la información.");
     } finally {
       setLoading(false);
     }

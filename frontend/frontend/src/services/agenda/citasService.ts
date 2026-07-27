@@ -15,4 +15,8 @@ export const citasService = {
     const res = await fetch(`${API_BASE_URL}/Clientes/${id}`);
     return res.json();
   },
+  getAllDetalles: async () => {
+    const res = await fetch(`${API_BASE_URL}/DetallesCita`);
+    return res.json();
+  }
 };
