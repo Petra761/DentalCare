@@ -108,17 +108,19 @@ const AgendaPage: React.FC = () => {
       </div>
 
       <motion.button
-        whileHover={{ scale: 1.05, y: -5 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.1, y: -5 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => navigate("/gestion-citas")}
-        className="fixed bottom-10 right-10 w-16 h-16 bg-primary text-white rounded-2xl shadow-[0_10px_25px_-5px_rgba(0,150,136,0.5)] flex items-center justify-center z-[60] group print:hidden border-b-4 border-secondary"
+        className="fixed bottom-10 right-10 w-16 h-16 bg-[#009688] text-white rounded-2xl shadow-[0_10px_25px_-5px_rgba(0,150,136,0.5)] flex items-center justify-center z-[60] group print:hidden border-b-4 border-[#00796b]"
+        style={{ backgroundColor: "#009688" }}
       >
-        <span className="material-symbols-outlined text-[32px] font-bold">
+        <span className="material-symbols-outlined text-[32px] font-bold text-white">
           add
         </span>
-        <div className="absolute right-20 bg-on-surface text-white px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap text-sm font-bold shadow-xl translate-x-4 group-hover:translate-x-0">
+
+        <span className="absolute right-20 bg-slate-800 text-white px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap text-xs font-bold shadow-xl translate-x-4 group-hover:translate-x-0">
           Nueva Cita
-        </div>
+        </span>
       </motion.button>
     </motion.div>
   );
