@@ -31,6 +31,14 @@ export const EditarPacienteModal: React.FC<Props> = ({
     estado: "Activo",
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({
+    ci: "",
+    nombre: "",
+    apellidoPaterno: "",
+    apellidoMaterno: "",
+    telefono: "",
+  });
+
   const [alergiasCatalogo, setAlergiasCatalogo] = useState<Alergia[]>([]);
   const [alergiasSeleccionadas, setAlergiasSeleccionadas] = useState<Alergia[]>([]);
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
@@ -82,10 +90,67 @@ export const EditarPacienteModal: React.FC<Props> = ({
     fetchTodo();
   }, [idCliente]);
 
+  const validarCampo = (name: string, value: string): string => {
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
+    const onlyDigits = /^\d*$/;
+
+    if (name === "ci") {
+      if (value.trim() === "") {
+        return "El CI es requerido.";
+      }
+      if (!onlyDigits.test(value)) {
+        return "El CI debe contener únicamente números.";
+      }
+    }
+
+    if (name === "nombre") {
+      if (value.trim() === "") {
+        return "El nombre es requerido.";
+      }
+      if (!nameRegex.test(value)) {
+        return "El nombre debe contener únicamente letras y espacios.";
+      }
+    }
+
+    if (name === "apellidoPaterno") {
+      if (value.trim() === "") {
+        return "El apellido paterno es requerido.";
+      }
+      if (!nameRegex.test(value)) {
+        return "El apellido paterno debe contener únicamente letras y espacios.";
+      }
+    }
+
+    if (name === "apellidoMaterno") {
+      if (value.trim() !== "" && !nameRegex.test(value)) {
+        return "El apellido materno debe contener únicamente letras y espacios.";
+      }
+    }
+
+    if (name === "telefono") {
+      if (value.trim() !== "") {
+        if (!onlyDigits.test(value)) {
+          return "El teléfono debe contener únicamente números.";
+        }
+        if (!/^[67]/.test(value)) {
+          return "El teléfono debe empezar con 6 o 7.";
+        }
+        if (value.length !== 8) {
+          return "El teléfono debe tener exactamente 8 dígitos.";
+        }
+      }
+    }
+
+    return "";
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    const errorMsg = validarCampo(name, value);
+    setErrors((prev) => ({ ...prev, [name]: errorMsg }));
   };
 
   const handleSeleccionarAlergia = (alergia: Alergia) => {
@@ -102,6 +167,24 @@ export const EditarPacienteModal: React.FC<Props> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+
+    const nuevosErrores = {
+      ci: validarCampo("ci", formData.ci),
+      nombre: validarCampo("nombre", formData.nombre),
+      apellidoPaterno: validarCampo("apellidoPaterno", formData.apellidoPaterno),
+      apellidoMaterno: validarCampo("apellidoMaterno", formData.apellidoMaterno),
+      telefono: validarCampo("telefono", formData.telefono),
+    };
+
+    setErrors(nuevosErrores);
+
+    if (Object.values(nuevosErrores).some((err) => err !== "")) {
+      const msg = "Por favor, corrige los errores en el formulario.";
+      setErrorMsg(msg);
+      showError(msg);
+      return;
+    }
+
     try {
       setLoadingGuardar(true);
       const payload = {
@@ -328,6 +411,7 @@ export const EditarPacienteModal: React.FC<Props> = ({
                     required
                     className="fc-input"
                   />
+                  {errors.ci && <span style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', display: 'block' }}>{errors.ci}</span>}
                 </div>
 
                 {/* Nombre */}
@@ -341,6 +425,7 @@ export const EditarPacienteModal: React.FC<Props> = ({
                     required
                     className="fc-input"
                   />
+                  {errors.nombre && <span style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', display: 'block' }}>{errors.nombre}</span>}
                 </div>
 
                 {/* Apellido Paterno */}
@@ -354,6 +439,7 @@ export const EditarPacienteModal: React.FC<Props> = ({
                     required
                     className="fc-input"
                   />
+                  {errors.apellidoPaterno && <span style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', display: 'block' }}>{errors.apellidoPaterno}</span>}
                 </div>
 
                 {/* Apellido Materno */}
@@ -366,6 +452,7 @@ export const EditarPacienteModal: React.FC<Props> = ({
                     onChange={handleChange}
                     className="fc-input"
                   />
+                  {errors.apellidoMaterno && <span style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', display: 'block' }}>{errors.apellidoMaterno}</span>}
                 </div>
 
                 {/* Fecha Nacimiento */}
@@ -393,14 +480,14 @@ export const EditarPacienteModal: React.FC<Props> = ({
                       style={{ appearance: "none", paddingRight: "36px" }}
                     >
                       <option value="">Seleccionar...</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
+                      <option value="O+">O+ (O Positivo)</option>
+                      <option value="O-">O- (O Negativo)</option>
+                      <option value="A+">A+ (A Positivo)</option>
+                      <option value="A-">A- (A Negativo)</option>
+                      <option value="B+">B+ (B Positivo)</option>
+                      <option value="B-">B- (B Negativo)</option>
+                      <option value="AB+">AB+ (AB Positivo)</option>
+                      <option value="AB-">AB- (AB Negativo)</option>
                     </select>
                     <ChevronDown
                       size={15}
@@ -422,11 +509,12 @@ export const EditarPacienteModal: React.FC<Props> = ({
                   <input
                     type="text"
                     name="telefono"
-                    placeholder="Ej: +598 99 123 456"
+                    placeholder="Ej: 71234567"
                     value={formData.telefono}
                     onChange={handleChange}
                     className="fc-input"
                   />
+                  {errors.telefono && <span style={{ color: '#EF4444', fontSize: '11px', marginTop: '4px', display: 'block' }}>{errors.telefono}</span>}
                 </div>
 
                 {/* Estado */}
